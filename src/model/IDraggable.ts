@@ -1,6 +1,7 @@
-export default interface IDraggable {
-  /** @hidden @internal */
-  isEnableDrag(): boolean;
-  /** @hidden @internal */
-  getName(): string | undefined;
+export interface IDraggable {
+    /** @internal */
+    isEnableDrag(): boolean;
+    /** @internal */
+    getName(): string | undefined;
 }
+

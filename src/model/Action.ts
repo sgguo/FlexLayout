@@ -1,13 +1,9 @@
-import { JSMap } from "../Types";
-
-class Action {
+export class Action {
     type: string;
-    data: JSMap<any>;
+    data: Record<string, any>;
 
-    constructor(type: string, data: JSMap<any>) {
+    constructor(type: string, data: Record<string, any>) {
         this.type = type;
         this.data = data;
     }
 }
-
-export default Action;

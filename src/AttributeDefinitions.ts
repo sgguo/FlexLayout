@@ -1,11 +1,9 @@
-import Attribute from "./Attribute";
-import { JSMap } from "./Types";
+import { Attribute } from "./Attribute";
 
-/** @hidden @internal */
-class AttributeDefinitions {
-
+/** @internal */
+export class AttributeDefinitions {
     attributes: Attribute[];
-    nameToAttribute: JSMap<Attribute>;
+    nameToAttribute: Record<string, Attribute>;
 
     constructor() {
         this.attributes = [];
@@ -40,43 +38,84 @@ class AttributeDefinitions {
     }
 
     toJson(jsonObj: any, obj: any) {
-        this.attributes.forEach((attr) => {
+        for (const attr of this.attributes) {
             const fromValue = obj[attr.name];
             if (attr.alwaysWriteJson || fromValue !== attr.defaultValue) {
                 jsonObj[attr.name] = fromValue;
             }
-        });
+        }
     }
 
     fromJson(jsonObj: any, obj: any) {
-        this.attributes.forEach((attr) => {
+        for (const attr of this.attributes) {
             const fromValue = jsonObj[attr.name];
             if (fromValue === undefined) {
                 obj[attr.name] = attr.defaultValue;
-            }
-            else {
+            } else {
                 obj[attr.name] = fromValue;
             }
-        });
+        }
     }
 
     update(jsonObj: any, obj: any) {
-        this.attributes.forEach((attr) => {
-
-            const fromValue = jsonObj[attr.name];
-            if (fromValue !== undefined) {
-                obj[attr.name] = fromValue;
+        for (const attr of this.attributes) {
+            if (jsonObj.hasOwnProperty(attr.name)) {
+                const fromValue = jsonObj[attr.name];
+                if (fromValue === undefined) {
+                    delete obj[attr.name];
+                } else {
+                    obj[attr.name] = fromValue;
+                }
             }
-        });
+        }
     }
 
     setDefaults(obj: any) {
-        this.attributes.forEach((attr) => {
+        for (const attr of this.attributes) {
             obj[attr.name] = attr.defaultValue;
-        });
+        }
     }
 
-}
+    toTypescriptInterface(name: string, parentAttributes: AttributeDefinitions | undefined) {
+        const lines = [];
+        const sorted = this.attributes.sort((a, b) => a.name.localeCompare(b.name));
+        // const sorted = this.attributes;
+        lines.push("export interface I" + name + "Attributes {");
+        for (let i = 0; i < sorted.length; i++) {
+            const c = sorted[i];
+            let type = c.type;
+            let defaultValue = undefined;
 
-/** @hidden @internal */
-export default AttributeDefinitions;
+            let attr = c;
+            let inherited = undefined;
+            if (attr.defaultValue !== undefined) {
+                defaultValue = attr.defaultValue;
+            } else if (attr.modelName !== undefined
+                && parentAttributes !== undefined
+                && parentAttributes.nameToAttribute[attr.modelName] !== undefined) {
+                inherited = attr.modelName;
+                attr = parentAttributes.nameToAttribute[attr.modelName];
+                defaultValue = attr.defaultValue;
+                type = attr.type;
+            }
+
+            let defValue = JSON.stringify(defaultValue);
+
+            const required = attr.required || attr.fixed ? "" : "?";
+
+            if (c.fixed) {
+                lines.push("\t" + c.name + ": " + defValue + ";");
+            } else {
+                const comment = (defaultValue !== undefined ? "default: " + defValue : "") +
+                    (inherited !== undefined ? " - inherited from global " + inherited : "");
+
+                lines.push("\t" + c.name + required + ": " + type + ";" +
+                    (comment.length > 0 ? " // " + comment : "")
+                );
+            }
+        }
+        lines.push("}");
+
+        return lines.join("\n");
+    }
+}

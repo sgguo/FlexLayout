@@ -1,28 +1,28 @@
-class Orientation {
-
+export class Orientation {
     static HORZ = new Orientation("horz");
     static VERT = new Orientation("vert");
 
     static flip(from: Orientation) {
         if (from === Orientation.HORZ) {
             return Orientation.VERT;
-        }
-        else {
+        } else {
             return Orientation.HORZ;
         }
     }
 
-     /** @hidden @internal */
-     private _name: string;
+    /** @internal */
+    private _name: string;
 
-     /** @hidden @internal */
-     private constructor(name: string) {
+    /** @internal */
+    private constructor(name: string) {
         this._name = name;
+    }
+
+    getName() {
+        return this._name;
     }
 
     toString() {
         return this._name;
     }
 }
-
-export default Orientation;

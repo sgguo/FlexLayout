@@ -1,57 +1,78 @@
-import AttributeDefinitions from "../AttributeDefinitions";
-import Orientation from "../Orientation";
-import Model from "./Model";
-import Node from "./Node";
+import { AttributeDefinitions } from "../AttributeDefinitions";
+import { Orientation } from "../Orientation";
+import { Model } from "./Model";
+import { Node } from "./Node";
 
-class SplitterNode extends Node {
+export class SplitterNode extends Node {
+    static readonly TYPE: string = "splitter";
 
-  static readonly TYPE: string = "splitter";
+    /** @internal */
+    constructor(model: Model) {
+        super(model);
+        this._fixed = true;
+        this._attributes.type = SplitterNode.TYPE;
+        model._addNode(this);
+    }
 
-  /** @hidden @internal */
-  constructor(model: Model) {
-    super(model);
-    this._fixed = true;
-    this._attributes.type = SplitterNode.TYPE;
-    model._addNode(this);
-  }
+    /** @internal */
+    getWidth() {
+        return this._model.getSplitterSize();
+    }
 
-  /** @hidden @internal */
-  getWidth() {
-    return this._model.getSplitterSize();
-  }
+    /** @internal */
+    getMinWidth() {
+        if (this.getOrientation() === Orientation.VERT) {
+            return this._model.getSplitterSize();
+        } else {
+            return 0;
+        }
+    }
 
-  /** @hidden @internal */
-  getHeight() {
-    return this._model.getSplitterSize();
-  }
+    /** @internal */
+    getHeight() {
+        return this._model.getSplitterSize();
+    }
 
-  /** @hidden @internal */
-  getWeight(): number {
-    return 0;
-  }
+    /** @internal */
+    getMinHeight() {
+        if (this.getOrientation() === Orientation.HORZ) {
+            return this._model.getSplitterSize();
+        } else {
+            return 0;
+        }
+    }
 
-  /** @hidden @internal */
-  _setWeight(value: number): void {
-  }
+    /** @internal */
+    getMinSize(orientation: Orientation) {
+        if (orientation === Orientation.HORZ) {
+            return this.getMinWidth();
+        } else {
+            return this.getMinHeight();
+        }
+    }
 
-  /** @hidden @internal */
-  _getPrefSize(orientation: Orientation): number {
-    return this._model.getSplitterSize();
-  }
+    /** @internal */
+    getWeight(): number {
+        return 0;
+    }
 
-  /** @hidden @internal */
-  _updateAttrs(json: any): void {
-  }
+    /** @internal */
+    _setWeight(value: number): void { }
 
-  /** @hidden @internal */
-  _getAttributeDefinitions(): AttributeDefinitions {
-    return new AttributeDefinitions();
-  }
+    /** @internal */
+    _getPrefSize(orientation: Orientation): number {
+        return this._model.getSplitterSize();
+    }
 
-  /** @hidden @internal */
-  _toJson(): any {
-    return undefined;
-  }
+    /** @internal */
+    _updateAttrs(json: any): void { }
+
+    /** @internal */
+    _getAttributeDefinitions(): AttributeDefinitions {
+        return new AttributeDefinitions();
+    }
+
+    toJson(): undefined {
+        return undefined;
+    }
 }
-
-export default SplitterNode;

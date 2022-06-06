@@ -4,8 +4,9 @@ bundles/
 examples/
 node_modules/
 spec/
-src/
 typedoc/
+cypress/
+test/
 package-lock.json
 todo.txt
 tsconfig.json
@@ -14,4 +15,5 @@ tsconfig3.json
 webpack_build_min.config.js
 webpack_build.config.js 
 webpack.config.js 
+cypress.json
 yarn.lock
