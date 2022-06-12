@@ -1,7 +1,7 @@
 {
-    "name": "flexlayout-react",
-    "version": "0.7.3",
-    "description": "A multi-tab docking layout manager",
+    "name": "@dashboardx/flex_layout",
+    "version": "1.0.0",
+    "description": "A multi-tab docking layout manager for dashboardx",
     "main": "lib/index.js",
     "types": "./declarations/index.d.ts",
     "keywords": [
