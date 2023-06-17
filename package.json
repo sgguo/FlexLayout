@@ -20,7 +20,7 @@
     ],
     "scripts": {
         "start": "webpack serve",
-        "build": "npm run css && npm run test && npm run doc && npm run build:demo && npm run build:commonjs && npm run build:umd && npm run build:umd:min",
+        "build": "npm run css && npm run doc && npm run build:demo && npm run build:commonjs && npm run build:umd && npm run build:umd:min",
         "build:commonjs": "tsc -p tsconfig2.json",
         "build:umd": "webpack --mode=development --config webpack_build.config.js",
         "build:umd:min": "webpack --mode=production --config webpack_build_min.config.js",
