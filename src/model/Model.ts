@@ -1,4 +1,3 @@
-import { v4 as getUUID } from "uuid";
 import { Attribute } from "../Attribute";
 import { AttributeDefinitions } from "../AttributeDefinitions";
 import { DockLocation } from "../DockLocation";
@@ -16,7 +15,7 @@ import { Node } from "./Node";
 import { RowNode } from "./RowNode";
 import { TabNode } from "./TabNode";
 import { TabSetNode } from "./TabSetNode";
-import { adjustSelectedIndexAfterDock, adjustSelectedIndexAfterFloat } from "./Utils";
+import { adjustSelectedIndexAfterDock, adjustSelectedIndexAfterFloat, randomUUID } from "./Utils";
 
 /** @internal */
 export interface ILayoutMetrics {
@@ -115,7 +114,7 @@ export class Model {
     /** @internal */
     private _idMap: Record<string, Node>;
     /** @internal */
-    private _changeListener?: () => void;
+    private _changeListener?: (action: Action) => void;
     /** @internal */
     private _root?: RowNode;
     /** @internal */
@@ -150,7 +149,7 @@ export class Model {
     }
 
     /** @internal */
-    _setChangeListener(listener: (() => void) | undefined) {
+    _setChangeListener(listener: ((action: Action) => void) | undefined) {
         this._changeListener = listener;
     }
 
@@ -244,7 +243,7 @@ export class Model {
      * Gets a node by its id
      * @param id the id to find
      */
-    getNodeById(id: string) {
+    getNodeById(id: string): Node | undefined {
         return this._idMap[id];
     }
 
@@ -402,7 +401,7 @@ export class Model {
         this._updateIdMap();
 
         if (this._changeListener !== undefined) {
-            this._changeListener();
+            this._changeListener(action);
         }
 
         return returnVal;
@@ -510,7 +509,7 @@ export class Model {
 
     /** @internal */
     _nextUniqueId() {
-        return '#' + getUUID();
+        return '#' + randomUUID();
     }
 
     /** @internal */
