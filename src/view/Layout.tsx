@@ -210,7 +210,7 @@ const defaultSupportsPopout: boolean = isDesktop && !isIEorEdge;
 /**
  * A React component that hosts a multi-tabbed layout
  */
-export class Layout extends React.Component<ILayoutProps, ILayoutState> {
+export class Layout extends React.Component<React.PropsWithChildren<ILayoutProps>, ILayoutState> {
 
     /** @internal */
     private selfRef: React.RefObject<HTMLDivElement>;
