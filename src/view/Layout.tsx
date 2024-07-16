@@ -26,7 +26,7 @@ import { FloatingWindowTab } from "./FloatingWindowTab";
 import { TabFloating } from "./TabFloating";
 import { IJsonTabNode } from "../model/IJsonModel";
 import { Orientation } from "../Orientation";
-import { CloseIcon, MaximizeIcon, OverflowIcon, PopoutIcon, RestoreIcon } from "./Icons";
+import { CloseIcon, EdgeIcon, MaximizeIcon, OverflowIcon, PopoutIcon, RestoreIcon } from "./Icons";
 import { TabButtonStamp } from "./TabButtonStamp";
 
 export type CustomDragCallback = (dragging: TabNode | IJsonTabNode, over: TabNode, x: number, y: number, location: DockLocation) => void;
@@ -101,6 +101,9 @@ export interface ITabSetRenderValues {
     stickyButtons: React.ReactNode[];
     buttons: React.ReactNode[];
     headerButtons: React.ReactNode[];
+    // position to insert overflow button within [...stickyButtons, ...buttons]
+    // if left undefined position will be after the sticky buttons (if any)
+    overflowPosition: number | undefined; 
 }
 
 export interface ITabRenderValues {
@@ -133,6 +136,7 @@ export interface IIcons {
     maximize?: (React.ReactNode | ((tabSetNode: TabSetNode) => React.ReactNode));
     restore?: (React.ReactNode | ((tabSetNode: TabSetNode) => React.ReactNode));
     more?: (React.ReactNode | ((tabSetNode: (TabSetNode | BorderNode), hiddenTabs: { node: TabNode; index: number }[]) => React.ReactNode));
+    edgeArrow?: React.ReactNode ;
 }
 
 const defaultIcons = {
@@ -142,6 +146,7 @@ const defaultIcons = {
     maximize: <MaximizeIcon />,
     restore: <RestoreIcon />,
     more: <OverflowIcon />,
+    edgeArrow: <EdgeIcon />
 };
 
 export interface ICustomDropDestination {
@@ -163,11 +168,11 @@ export interface ILayoutCallbacks {
     getPopoutURL(): string;
     isSupportsPopout(): boolean;
     isRealtimeResize(): boolean;
-    getCurrentDocument(): HTMLDocument | undefined;
+    getCurrentDocument(): Document | undefined;
     getClassName(defaultClassName: string): string;
     doAction(action: Action): Node | undefined;
-    getDomRect(): any;
-    getRootDiv(): HTMLDivElement;
+    getDomRect(): DOMRect | undefined;
+    getRootDiv(): HTMLDivElement | null;
     dragStart(
         event: Event | React.MouseEvent<HTMLDivElement, MouseEvent> | React.TouchEvent<HTMLDivElement> | React.DragEvent<HTMLDivElement> | undefined,
         dragDivText: string | undefined,
@@ -257,7 +262,7 @@ export class Layout extends React.Component<React.PropsWithChildren<ILayoutProps
     /** @internal */
     private fnNewNodeDropped?: (node?: Node, event?: Event) => void;
     /** @internal */
-    private currentDocument?: HTMLDocument;
+    private currentDocument?: Document;
     /** @internal */
     private currentWindow?: Window;
     /** @internal */
@@ -347,7 +352,10 @@ export class Layout extends React.Component<React.PropsWithChildren<ILayoutProps
         this.resizeObserver = new ResizeObserver(entries => {
             this.updateRect(entries[0].contentRect);
         });
-        this.resizeObserver.observe(this.selfRef.current!);
+        const selfRefCurr = this.selfRef.current;
+        if (selfRefCurr) {
+            this.resizeObserver.observe(selfRefCurr);
+        }
     }
 
     /** @internal */
@@ -364,7 +372,14 @@ export class Layout extends React.Component<React.PropsWithChildren<ILayoutProps
     }
 
     /** @internal */
-    updateRect = (domRect: DOMRectReadOnly = this.getDomRect()) => {
+    updateRect = (domRect?: DOMRectReadOnly) => {
+        if (!domRect) {
+            domRect = this.getDomRect();
+        }
+        if (!domRect) {
+            // no dom rect available, return.
+            return;
+        }
         const rect = new Rect(0, 0, domRect.width, domRect.height);
         if (!rect.equals(this.state.rect) && rect.width !== 0 && rect.height !== 0) {
             this.setState({ rect });
@@ -409,12 +424,12 @@ export class Layout extends React.Component<React.PropsWithChildren<ILayoutProps
 
     /** @internal */
     getDomRect() {
-        return this.selfRef.current!.getBoundingClientRect();
+        return this.selfRef.current?.getBoundingClientRect();
     }
 
     /** @internal */
     getRootDiv() {
-        return this.selfRef.current!;
+        return this.selfRef.current;
     }
 
     /** @internal */
@@ -439,7 +454,10 @@ export class Layout extends React.Component<React.PropsWithChildren<ILayoutProps
 
     /** @internal */
     componentWillUnmount() {
-        this.resizeObserver?.unobserve(this.selfRef.current!)
+        const selfRefCurr = this.selfRef.current;
+        if (selfRefCurr) {
+            this.resizeObserver?.unobserve(selfRefCurr);
+        }
     }
 
     /** @internal */
@@ -503,6 +521,7 @@ export class Layout extends React.Component<React.PropsWithChildren<ILayoutProps
         }
 
         const edges: React.ReactNode[] = [];
+        const arrowIcon = this.icons.edgeArrow;
         if (this.state.showEdges) {
             const r = this.centerRect;
             const length = this.edgeRectLength;
@@ -510,10 +529,26 @@ export class Layout extends React.Component<React.PropsWithChildren<ILayoutProps
             const offset = this.edgeRectLength / 2;
             const className = this.getClassName(CLASSES.FLEXLAYOUT__EDGE_RECT);
             const radius = 50;
-            edges.push(<div key="North" style={{ top: r.y, left: r.x + r.width / 2 - offset, width: length, height: width, borderBottomLeftRadius: radius, borderBottomRightRadius: radius }} className={className}></div>)
-            edges.push(<div key="West" style={{ top: r.y + r.height / 2 - offset, left: r.x, width: width, height: length, borderTopRightRadius: radius, borderBottomRightRadius: radius }} className={className}></div>)
-            edges.push(<div key="South" style={{ top: r.y + r.height - width, left: r.x + r.width / 2 - offset, width: length, height: width, borderTopLeftRadius: radius, borderTopRightRadius: radius }} className={className}></div>)
-            edges.push(<div key="East" style={{ top: r.y + r.height / 2 - offset, left: r.x + r.width - width, width: width, height: length, borderTopLeftRadius: radius, borderBottomLeftRadius: radius }} className={className}></div>)
+            edges.push(<div key="North" style={{ top: r.y, left: r.x + r.width / 2 - offset, width: length, height: width, borderBottomLeftRadius: radius, borderBottomRightRadius: radius }} className={className + " " + this.getClassName(CLASSES.FLEXLAYOUT__EDGE_RECT_TOP)}>
+                <div style={{transform: "rotate(180deg)"}}>
+                    {arrowIcon}
+                </div>
+            </div>);
+            edges.push(<div key="West" style={{ top: r.y + r.height / 2 - offset, left: r.x, width: width, height: length, borderTopRightRadius: radius, borderBottomRightRadius: radius }} className={className + " " + this.getClassName(CLASSES.FLEXLAYOUT__EDGE_RECT_LEFT)}>
+                <div style={{transform: "rotate(90deg)"}}>
+                    {arrowIcon}
+                </div>
+            </div>);
+            edges.push(<div key="South" style={{ top: r.y + r.height - width, left: r.x + r.width / 2 - offset, width: length, height: width, borderTopLeftRadius: radius, borderTopRightRadius: radius }} className={className + " " + this.getClassName(CLASSES.FLEXLAYOUT__EDGE_RECT_BOTTOM)}>
+                <div>
+                    {arrowIcon}
+                </div>
+            </div>);
+            edges.push(<div key="East" style={{ top: r.y + r.height / 2 - offset, left: r.x + r.width - width, width: width, height: length, borderTopLeftRadius: radius, borderBottomLeftRadius: radius }} className={className + " " + this.getClassName(CLASSES.FLEXLAYOUT__EDGE_RECT_RIGHT)}>
+                <div style={{transform: "rotate(-90deg)"}}>
+                    {arrowIcon}
+                </div>
+            </div>);
         }
 
         // this.layoutTime = (Date.now() - this.start);
@@ -595,6 +630,17 @@ export class Layout extends React.Component<React.PropsWithChildren<ILayoutProps
                         let path = borderPath + "/t" + tabCount++;
                         if (this.supportsPopout && child.isFloating()) {
                             const rect = this._getScreenRect(child);
+
+                            const tabBorderWidth = child._getAttr("borderWidth");
+                            const tabBorderHeight = child._getAttr("borderHeight");
+                            if (rect) {
+                                if (tabBorderWidth !== -1 && border.getLocation().getOrientation() === Orientation.HORZ) {
+                                    rect.width = tabBorderWidth;
+                                } else if (tabBorderHeight !== -1 && border.getLocation().getOrientation() === Orientation.VERT) {
+                                    rect.height = tabBorderHeight;
+                                }
+                            }
+
                             floatingWindows.push(
                                 <FloatingWindow
                                     key={child.getId()}
@@ -681,7 +727,11 @@ export class Layout extends React.Component<React.PropsWithChildren<ILayoutProps
     /** @internal */
     _getScreenRect(node: TabNode) {
         const rect = node!.getRect()!.clone();
-        const bodyRect: DOMRect = this.selfRef.current!.getBoundingClientRect();
+        const bodyRect: DOMRect | undefined =
+            this.selfRef.current?.getBoundingClientRect();
+        if (!bodyRect) {
+            return null;
+        }
         const navHeight = Math.min(80, this.currentWindow!.outerHeight - this.currentWindow!.innerHeight);
         const navWidth = Math.min(80, this.currentWindow!.outerWidth - this.currentWindow!.innerWidth);
         rect.x = rect.x + bodyRect.x + this.currentWindow!.screenX + navWidth;
@@ -693,23 +743,29 @@ export class Layout extends React.Component<React.PropsWithChildren<ILayoutProps
      * Adds a new tab to the given tabset
      * @param tabsetId the id of the tabset where the new tab will be added
      * @param json the json for the new tab node
+     * @returns the added tab node or undefined
      */
-    addTabToTabSet(tabsetId: string, json: IJsonTabNode) {
+    addTabToTabSet(tabsetId: string, json: IJsonTabNode) : TabNode | undefined {
         const tabsetNode = this.props.model.getNodeById(tabsetId);
         if (tabsetNode !== undefined) {
-            this.doAction(Actions.addNode(json, tabsetId, DockLocation.CENTER, -1));
+            const node = this.doAction(Actions.addNode(json, tabsetId, DockLocation.CENTER, -1));
+            return node as TabNode;
         }
+        return undefined;
     }
 
     /**
      * Adds a new tab to the active tabset (if there is one)
      * @param json the json for the new tab node
+     * @returns the added tab node or undefined
      */
-    addTabToActiveTabSet(json: IJsonTabNode) {
+    addTabToActiveTabSet(json: IJsonTabNode) : TabNode | undefined {
         const tabsetNode = this.props.model.getActiveTabset();
         if (tabsetNode !== undefined) {
-            this.doAction(Actions.addNode(json, tabsetNode.getId(), DockLocation.CENTER, -1));
+            const node = this.doAction(Actions.addNode(json, tabsetNode.getId(), DockLocation.CENTER, -1));
+            return node as TabNode;
         }
+        return undefined;
     }
 
     /**
@@ -773,7 +829,9 @@ export class Layout extends React.Component<React.PropsWithChildren<ILayoutProps
     /** @internal */
     onCancelAdd = () => {
         const rootdiv = this.selfRef.current;
-        rootdiv!.removeChild(this.dragDiv!);
+        if (rootdiv && this.dragDiv) {
+            rootdiv.removeChild(this.dragDiv);
+        }
         this.dragDiv = undefined;
         this.hidePortal();
         if (this.fnNewNodeDropped != null) {
@@ -795,15 +853,21 @@ export class Layout extends React.Component<React.PropsWithChildren<ILayoutProps
     /** @internal */
     onCancelDrag = (wasDragging: boolean) => {
         if (wasDragging) {
-            const rootdiv = this.selfRef.current!;
+            const rootdiv = this.selfRef.current;
 
-            try {
-                rootdiv.removeChild(this.outlineDiv!);
-            } catch (e) { }
+            const outlineDiv = this.outlineDiv;
+            if (rootdiv && outlineDiv) {
+                try {
+                    rootdiv.removeChild(outlineDiv);
+                } catch (e) {}
+            }
 
-            try {
-                rootdiv.removeChild(this.dragDiv!);
-            } catch (e) { }
+            const dragDiv = this.dragDiv;
+            if (rootdiv && dragDiv) {
+                try {
+                    rootdiv.removeChild(dragDiv);
+                } catch (e) {}
+            }
 
             this.dragDiv = undefined;
             this.hidePortal();
@@ -843,11 +907,31 @@ export class Layout extends React.Component<React.PropsWithChildren<ILayoutProps
         onDoubleClick?: (event: Event) => void
     ) => {
         if (!allowDrag) {
-            DragDrop.instance.startDrag(event, undefined, undefined, undefined, undefined, onClick, onDoubleClick, this.currentDocument, this.selfRef.current!);
+            DragDrop.instance.startDrag(
+                event,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                onClick,
+                onDoubleClick,
+                this.currentDocument,
+                this.selfRef.current ?? undefined
+            );
         } else {
             this.dragNode = node;
             this.dragDivText = dragDivText;
-            DragDrop.instance.startDrag(event, this.onDragStart, this.onDragMove, this.onDragEnd, this.onCancelDrag, onClick, onDoubleClick, this.currentDocument, this.selfRef.current!);
+            DragDrop.instance.startDrag(
+                event,
+                this.onDragStart,
+                this.onDragMove,
+                this.onDragEnd,
+                this.onCancelDrag,
+                onClick,
+                onDoubleClick,
+                this.currentDocument,
+                this.selfRef.current ?? undefined
+            );
         }
     };
 
@@ -876,18 +960,22 @@ export class Layout extends React.Component<React.PropsWithChildren<ILayoutProps
         }
 
         // hide div until the render is complete
-        this.dragDiv!.style.visibility = "hidden";
         this.dragRectRendered = false;
-        this.showPortal(
-            <DragRectRenderWrapper
-                // wait for it to be rendered
-                onRendered={() => {
-                    this.dragRectRendered = true;
-                    onRendered?.();
-                }}>
-                {content}
-            </DragRectRenderWrapper>,
-            this.dragDiv!);
+        const dragDiv = this.dragDiv;
+        if (dragDiv) {
+            dragDiv.style.visibility = "hidden";
+            this.showPortal(
+                <DragRectRenderWrapper
+                    // wait for it to be rendered
+                    onRendered={() => {
+                        this.dragRectRendered = true;
+                        onRendered?.();
+                    }}>
+                    {content}
+                </DragRectRenderWrapper>,
+                dragDiv,
+            );
+        }
     };
 
     /** @internal */
@@ -905,11 +993,13 @@ export class Layout extends React.Component<React.PropsWithChildren<ILayoutProps
     onDragStart = () => {
         this.dropInfo = undefined;
         this.customDrop = undefined;
-        const rootdiv = this.selfRef.current!;
+        const rootdiv = this.selfRef.current;
         this.outlineDiv = this.currentDocument!.createElement("div");
         this.outlineDiv.className = this.getClassName(CLASSES.FLEXLAYOUT__OUTLINE_RECT);
         this.outlineDiv.style.visibility = "hidden";
-        rootdiv.appendChild(this.outlineDiv);
+        if (rootdiv) {
+            rootdiv.appendChild(this.outlineDiv);
+        }
 
         if (this.dragDiv == null) {
             this.dragDiv = this.currentDocument!.createElement("div");
@@ -917,15 +1007,17 @@ export class Layout extends React.Component<React.PropsWithChildren<ILayoutProps
             this.dragDiv.setAttribute("data-layout-path", "/drag-rectangle");
             this.dragRectRender(this.dragDivText, this.dragNode, this.newTabJson);
 
-            rootdiv.appendChild(this.dragDiv);
+            if (rootdiv) {
+                rootdiv.appendChild(this.dragDiv);
+            }
         }
         // add edge indicators
         if (this.props.model.getMaximizedTabset() === undefined) {
-            this.setState({ showEdges: true });
+            this.setState({ showEdges: this.props.model.isEnableEdgeDock() });
         }
 
-        if (this.dragNode !== undefined && this.dragNode instanceof TabNode && this.dragNode.getTabRect() !== undefined) {
-            this.dragNode.getTabRect()!.positionElement(this.outlineDiv);
+        if (this.dragNode && this.outlineDiv && this.dragNode instanceof TabNode && this.dragNode.getTabRect() !== undefined) {
+            this.dragNode.getTabRect()?.positionElement(this.outlineDiv);
         }
         this.firstMove = true;
 
@@ -936,30 +1028,34 @@ export class Layout extends React.Component<React.PropsWithChildren<ILayoutProps
     onDragMove = (event: React.MouseEvent<Element>) => {
         if (this.firstMove === false) {
             const speed = this.props.model._getAttribute("tabDragSpeed") as number;
-            this.outlineDiv!.style.transition = `top ${speed}s, left ${speed}s, width ${speed}s, height ${speed}s`;
+            if (this.outlineDiv) {
+                this.outlineDiv.style.transition = `top ${speed}s, left ${speed}s, width ${speed}s, height ${speed}s`;
+            }
         }
         this.firstMove = false;
-        const clientRect = this.selfRef.current!.getBoundingClientRect();
+        const clientRect = this.selfRef.current?.getBoundingClientRect();
         const pos = {
-            x: event.clientX - clientRect.left,
-            y: event.clientY - clientRect.top,
+            x: event.clientX - (clientRect?.left ?? 0),
+            y: event.clientY - (clientRect?.top ?? 0),
         };
 
         this.checkForBorderToShow(pos.x, pos.y);
 
         // keep it between left & right
-        const dragRect = this.dragDiv!.getBoundingClientRect();
+        const dragRect = this.dragDiv?.getBoundingClientRect() ?? new DOMRect(0, 0, 100, 100);
         let newLeft = pos.x - dragRect.width / 2;
-        if (newLeft + dragRect.width > clientRect.width) {
-            newLeft = clientRect.width - dragRect.width;
+        if (newLeft + dragRect.width > (clientRect?.width ?? 0)) {
+            newLeft = (clientRect?.width ?? 0) - dragRect.width;
         }
         newLeft = Math.max(0, newLeft);
 
-        this.dragDiv!.style.left = newLeft + "px";
-        this.dragDiv!.style.top = pos.y + 5 + "px";
-        if (this.dragRectRendered && this.dragDiv!.style.visibility === "hidden") {
-            // make visible once the drag rect has been rendered
-            this.dragDiv!.style.visibility = "visible";
+        if (this.dragDiv) {
+            this.dragDiv.style.left = newLeft + "px";
+            this.dragDiv.style.top = pos.y + 5 + "px";
+            if (this.dragRectRendered && this.dragDiv.style.visibility === "hidden") {
+                // make visible once the drag rect has been rendered
+                this.dragDiv.style.visibility = "visible";
+            }
         }
 
         let dropInfo = this.props.model._findDropTargetNode(this.dragNode!, pos.x, pos.y);
@@ -968,18 +1064,26 @@ export class Layout extends React.Component<React.PropsWithChildren<ILayoutProps
                 this.handleCustomTabDrag(dropInfo, pos, event);
             } else {
                 this.dropInfo = dropInfo;
-                this.outlineDiv!.className = this.getClassName(dropInfo.className);
-                dropInfo.rect.positionElement(this.outlineDiv!);
-                this.outlineDiv!.style.visibility = "visible";
+                if (this.outlineDiv) {
+                    this.outlineDiv.className = this.getClassName(dropInfo.className);
+                    dropInfo.rect.positionElement(this.outlineDiv);
+                    this.outlineDiv.style.visibility = "visible";
+                }
             }
         }
     };
 
     /** @internal */
     onDragEnd = (event: Event) => {
-        const rootdiv = this.selfRef.current!;
-        rootdiv.removeChild(this.outlineDiv!);
-        rootdiv.removeChild(this.dragDiv!);
+        const rootdiv = this.selfRef.current;
+        if (rootdiv) {
+            if (this.outlineDiv) {
+                rootdiv.removeChild(this.outlineDiv);
+            }
+            if (this.dragDiv) {
+                rootdiv.removeChild(this.dragDiv);
+            }
+        }
         this.dragDiv = undefined;
         this.hidePortal();
 
@@ -1058,16 +1162,19 @@ export class Layout extends React.Component<React.PropsWithChildren<ILayoutProps
         }
 
         this.dropInfo = dropInfo;
-        this.outlineDiv!.className = this.getClassName(this.customDrop ? CLASSES.FLEXLAYOUT__OUTLINE_RECT : dropInfo.className);
-
-        if (this.customDrop) {
-            this.customDrop.rect.positionElement(this.outlineDiv!);
-        } else {
-            dropInfo.rect.positionElement(this.outlineDiv!);
+        if (this.outlineDiv) {
+            this.outlineDiv.className = this.getClassName(this.customDrop ? CLASSES.FLEXLAYOUT__OUTLINE_RECT : dropInfo.className);
+            if (this.customDrop) {
+                this.customDrop.rect.positionElement(this.outlineDiv);
+            } else {
+                dropInfo.rect.positionElement(this.outlineDiv);
+            }
         }
 
         DragDrop.instance.setGlassCursorOverride(this.customDrop?.cursor);
-        this.outlineDiv!.style.visibility = "visible";
+        if (this.outlineDiv) {
+            this.outlineDiv.style.visibility = "visible";
+        }
 
         try {
             invalidated?.();

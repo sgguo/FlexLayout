@@ -128,18 +128,20 @@ class App extends React.Component<any, { layoutFile: string | null, model: Model
     }
 
     onAddActiveClick = (event: React.MouseEvent) => {
-        (this.layoutRef!.current!).addTabToActiveTabSet({
+        const addedTab = (this.layoutRef!.current!).addTabToActiveTabSet({
             component: "grid",
             icon: "images/article.svg",
             name: "Grid " + this.nextGridIndex++
         });
+        console.log("Added tab", addedTab);
     }
 
     onAddFromTabSetButton = (node: TabSetNode | BorderNode) => {
-        (this.layoutRef!.current!).addTabToTabSet(node.getId(), {
+        const addedTab = (this.layoutRef!.current!).addTabToTabSet(node.getId(), {
             component: "grid",
             name: "Grid " + this.nextGridIndex++
         });
+        console.log("Added tab", addedTab);
     }
 
     onAddIndirectClick = (event: React.MouseEvent) => {
@@ -179,7 +181,7 @@ class App extends React.Component<any, { layoutFile: string | null, model: Model
             console.log(node, event);
             showPopup(
                 node instanceof TabNode ? "Tab: " + node.getName() : "Type: " + node.getType(),
-                (this.layoutRef!.current!).getRootDiv(),
+                (this.layoutRef!.current!).getRootDiv()!,
                 event.clientX, event.clientY,
                 ["Option 1", "Option 2"],
                 (item: string | undefined) => {
@@ -391,26 +393,32 @@ class App extends React.Component<any, { layoutFile: string | null, model: Model
     }
 
     onRenderTab = (node: TabNode, renderValues: ITabRenderValues) => {
-        // renderValues.content = (<InnerComponent/>);
+        // renderValues.content = (<div>hello</div>);
         // renderValues.content += " *";
         // renderValues.leading = <img style={{width:"1em", height:"1em"}}src="images/folder.svg"/>;
         // renderValues.name = "tab " + node.getId(); // name used in overflow menu
+        // renderValues.buttons.push(<div style={{flexGrow:1}}></div>);
         // renderValues.buttons.push(<img style={{width:"1em", height:"1em"}} src="images/folder.svg"/>);
     }
 
     onRenderTabSet = (node: (TabSetNode | BorderNode), renderValues: ITabSetRenderValues) => {
         if (this.state.layoutFile === "default") {
             //renderValues.headerContent = "-- " + renderValues.headerContent + " --";
-            //renderValues.buttons.push(<img style={{width:"1em", height:"1em"}} src="images/folder.svg"/>);
-            renderValues.stickyButtons.push(
-                <img src="images/add.svg"
-                    alt="Add"
-                    key="Add button"
-                    title="Add Tab (using onRenderTabSet callback, see Demo)"
-                    style={{ width: "1.1em", height: "1.1em" }}
-                    className="flexlayout__tab_toolbar_button"
-                    onClick={() => this.onAddFromTabSetButton(node)}
-                />);
+            //renderValues.buttons.push(<img key="folder" style={{width:"1em", height:"1em"}} src="images/folder.svg"/>);
+            if (node instanceof TabSetNode) { // don't show + button on border tabsets
+                renderValues.stickyButtons.push(
+                    <img src="images/add.svg"
+                        alt="Add"
+                        key="Add button"
+                        title="Add Tab (using onRenderTabSet callback, see Demo)"
+                        style={{ width: "1.1em", height: "1.1em" }}
+                        className="flexlayout__tab_toolbar_button"
+                        onClick={() => this.onAddFromTabSetButton(node)}
+                    />);
+
+                // put overflow button before + button (default is after)
+                // renderValues.overflowPosition=0    
+            }
         }
     }
 
@@ -479,6 +487,7 @@ class App extends React.Component<any, { layoutFile: string | null, model: Model
                             <option value="default">Default</option>
                             <option value="newfeatures">New Features</option>
                             <option value="simple">Simple</option>
+                            <option value="mosaic">Mosaic Style</option>
                             <option value="sub">SubLayout</option>
                             <option value="complex">Complex</option>
                             <option value="headers">Headers</option>

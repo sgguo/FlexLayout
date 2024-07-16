@@ -42,23 +42,27 @@ Features:
 
 ## Installation
 
-FlexLayout is in the npm repository. Simply install React and FlexLayout from npm:
+FlexLayout is in the npm repository. install using:
 
 ```
-npm install react
-npm install react-dom
 npm install flexlayout-react
 ```
 
-Import React and FlexLayout in your modules:
+Import FlexLayout in your modules:
 
 ```
-import * as React from "react";
-import { createRoot } from "react-dom/client";
-import * as FlexLayout from "flexlayout-react";
+import {Layout, Model} from 'flexlayout-react';
 ```
 
-Include the light, underline, gray or dark style in your html:
+Include the light, underline, gray or dark theme by either:
+
+Adding an additional import:
+
+```
+import 'flexlayout-react/style/light.css';  
+```
+
+or by adding the css to your html:
 
 ```
 <link rel="stylesheet" href="node_modules/flexlayout-react/style/light.css" />
@@ -84,14 +88,6 @@ The model is tree of Node objects that define the structure of the layout.
 The factory is a function that takes a Node object and returns a React component that should be hosted by a tab in the layout.
 
 The model can be created using the Model.fromJson(jsonObject) static method, and can be saved using the model.toJson() method.
-
-```javascript
-this.state = {model: FlexLayout.Model.fromJson(json)};
-
-render() {
-	<FlexLayout.Layout model={this.state.model} factory={factory}/>
-}
-```
 
 ## Example Configuration:
 
@@ -132,34 +128,25 @@ var json = {
 
 ## Example Code
 
-```
-import * as React from "react";
-import { createRoot } from "react-dom/client";
-import * as FlexLayout from "flexlayout-react";
+```javascript
+const model = Model.fromJson(json);
 
-class Main extends React.Component {
+function App() {
 
-    constructor(props) {
-        super(props);
-        this.state = {model: FlexLayout.Model.fromJson(json)};
+  const factory = (node) => {
+    var component = node.getComponent();
+
+    if (component === "button") {
+      return <button>{node.getName()}</button>;
     }
+  }
 
-    factory = (node) => {
-        var component = node.getComponent();
-        if (component === "button") {
-            return <button>{node.getName()}</button>;
-        }
-    }
-
-    render() {
-        return (
-            <FlexLayout.Layout model={this.state.model} factory={this.factory}/>
-        )
-    }
+  return (
+    <Layout
+      model={model}
+      factory={factory} />
+  );
 }
-
-const root = createRoot(document.getElementById("container"));
-root.render(<Main/>);
 ```		
 
 The above code would render two tabsets horizontally each containing a single tab that hosts a button component. The tabs could be moved and resized by dragging and dropping. Additional grids could be added to the layout by sending actions to the model.
@@ -195,55 +182,6 @@ Weights on rows and tabsets specify the relative weight of these nodes within th
 NOTE: the easiest way to create your initial layout JSON is to use the [demo](https://rawgit.com/caplin/FlexLayout/demos/demos/v0.7/demo/index.html) app, modify one of the 
 existing layouts by dragging/dropping and adding nodes then press the 'Show Layout JSON in console' button to print the JSON to the browser developer console.
 
-
-example borders section:
-```
-    borders: [
-         {
-            type: "border",
-            location: "left",
-            children: [
-                {
-                    type: "tab",
-                    enableClose: false,
-                    name: "Navigation",
-                    component: "grid",
-                }
-            ]
-        },
-        {
-            type: "border",
-            location: "right",
-            children: [
-                {
-                    type: "tab",
-                    enableClose: false,
-                    name: "Options",
-                    component: "grid",
-                }
-            ]
-        },
-        {
-            type: "border",
-            location: "bottom",
-            children: [
-                {
-                    type: "tab",
-                    enableClose: false,
-                    name: "Activity Blotter",
-                    component: "grid",
-                },
-                {
-                    type: "tab",
-                    enableClose: false,
-                    name: "Execution Blotter",
-                    component: "grid",
-                }
-            ]
-        }
-    ]
-```
-
 To control where nodes can be dropped you can add a callback function to the model:
 
 ```
@@ -251,7 +189,7 @@ model.setOnAllowDrop(this.allowDrop);
 ```
 
 example:
-```
+```javascript
     allowDrop(dragNode, dropInfo) {
         let dropNode = dropInfo.node;
 
@@ -334,47 +272,50 @@ for example see the getDocument() callback in agGrid at https://www.ag-grid.com/
 Attributes allowed in the 'global' element
 
 
-| Attribute | Default | Description  |
-| ------------- |:-------------:| -----|
-| splitterSize | 8 | width in pixels of all splitters between tabsets/borders |
-| splitterExtra | 0 | additional width in pixels of the splitter hit test area |
-| legacyOverflowMenu | false | use the legacy text only overflow menu |
-| enableEdgeDock | true | |
-| tabEnableClose | true | allow user to close all tabs via close button |
-| tabCloseType | 1 | see values in ICloseType |
-| tabEnableDrag | true | allow user to drag all tabs to new location |
-| tabEnableRename | true | allow user to rename all tabs by double clicking |
-| tabEnableFloat | false | enable popouts in all tabs (in popout capable browser) |
-| tabClassName | null | |
-| tabIcon | null | |
-| tabEnableRenderOnDemand | true | whether to avoid rendering component until tab is visible |
-| tabDragSpeed | 0.3 | CSS transition speed of drag outlines (in seconds) |
-| tabBorderWidth | -1 | width when added to border, -1 will use border size |
-| tabBorderHeight | -1 | height when added to border, -1 will use border size |
-| tabSetEnableDeleteWhenEmpty | true | |
-| tabSetEnableDrop | true | allow user to drag tabs into all tabsets |
-| tabSetEnableDrag | true | allow user to drag tabs out of all tabsets |
-| tabSetEnableDivide | true | allow user to drag tabs to region of all tabsets, splitting into new tabset |
-| tabSetEnableMaximize | true | allow user to maximize all tabsets to fill view via maximize button |
-| tabSetEnableClose | false | allow user to close all tabsets via close button |
-| tabSetAutoSelectTab | true | whether to select new/moved tabs in all tabsets |
-| tabSetClassNameTabStrip | null | height in pixels of tab strips in all tabsets |
-| tabSetClassNameHeader | null | |
-| tabSetEnableTabStrip | true | enable tab strip and allow multiple tabs in all tabsets |
-| tabSetHeaderHeight | 0 | height of tabset header in pixels; if left as 0 then the value will be calculated from the current fontSize |
-| tabSetTabStripHeight | 0 | height of tabset tab bar in pixels; if left as 0 then the value will be calculated from the current fontSize |
-| borderBarSize | 0 | size of the border bars in pixels; if left as 0 then the value will be calculated from the current fontSize |
-| borderEnableAutoHide | false | hide border if it has zero tabs |
-| borderEnableDrop | true | allow user to drag tabs into this border |
-| borderAutoSelectTabWhenOpen | true | whether to select new/moved tabs in border when the border is already open |
-| borderAutoSelectTabWhenClosed | false | whether to select new/moved tabs in border when the border is curently closed |
-| borderClassName | null | |
-| borderSize | 200 | initial width in pixels for left/right borders, height for top/bottom borders |
-| borderMinSize | 0 | minimum width in pixels for left/right borders, height for top/bottom borders |
-| tabSetMinHeight | 0 | minimum width (in px) for all tabsets |
-| tabSetMinWidth | 0 | minimum height (in px) for all tabsets |
-| tabSetTabLocation | top | show tabs in location top or bottom |
-| rootOrientationVertical | false | the top level 'row' will layout horizontally by default, set this option true to make it layout vertically |
+| Attribute                     | Default | Description                                                                                                  |
+|-------------------------------|:-------:|--------------------------------------------------------------------------------------------------------------|
+| splitterSize                  |    8    | width in pixels of all splitters between tabsets/borders                                                     |
+| splitterExtra                 |    0    | additional width in pixels of the splitter hit test area                                                     |
+| legacyOverflowMenu            |  false  | use the legacy text only overflow menu                                                                       |
+| enableEdgeDock                |  true   |                                                                                                              |
+| enableRotateBorderIcons       |  true   | boolean indicating if tab icons should rotate with the text in the left and right borders                    |
+| tabEnableClose                |  true   | allow user to close all tabs via close button                                                                |
+| tabCloseType                  |    1    | see values in ICloseType                                                                                     |
+| tabEnableDrag                 |  true   | allow user to drag all tabs to new location                                                                  |
+| tabEnableRename               |  true   | allow user to rename all tabs by double clicking                                                             |
+| tabEnableFloat                |  false  | enable popouts in all tabs (in popout capable browser)                                                       |
+| tabClassName                  |  null   |                                                                                                              |
+| tabContentClassName           |  null   |                                                                                                              |
+| tabIcon                       |  null   |                                                                                                              |
+| tabEnableRenderOnDemand       |  true   | whether to avoid rendering component until tab is visible                                                    |
+| tabDragSpeed                  |   0.3   | CSS transition speed of drag outlines (in seconds)                                                           |
+| tabBorderWidth                |   -1    | width when added to border, -1 will use border size                                                          |
+| tabBorderHeight               |   -1    | height when added to border, -1 will use border size                                                         |
+| tabSetEnableDeleteWhenEmpty   |  true   |                                                                                                              |
+| tabSetEnableDrop              |  true   | allow user to drag tabs into all tabsets                                                                     |
+| tabSetEnableDrag              |  true   | allow user to drag tabs out of all tabsets                                                                   |
+| tabSetEnableDivide            |  true   | allow user to drag tabs to region of all tabsets, splitting into new tabset                                  |
+| tabSetEnableMaximize          |  true   | allow user to maximize all tabsets to fill view via maximize button                                          |
+| tabSetEnableClose             |  false  | allow user to close all tabsets via close button                                                             |
+| tabSetAutoSelectTab           |  true   | whether to select new/moved tabs in all tabsets                                                              |
+| tabSetClassNameTabStrip       |  null   | height in pixels of tab strips in all tabsets                                                                |
+| tabSetEnableSingleTabStretch  |  false  | if a tabset has only a single tab then stretch the single tab to fill area and display in a header style     |
+| tabSetClassNameHeader         |  null   |                                                                                                              |
+| tabSetEnableTabStrip          |  true   | enable tab strip and allow multiple tabs in all tabsets                                                      |
+| tabSetHeaderHeight            |    0    | height of tabset header in pixels; if left as 0 then the value will be calculated from the current fontSize  |
+| tabSetTabStripHeight          |    0    | height of tabset tab bar in pixels; if left as 0 then the value will be calculated from the current fontSize |
+| borderBarSize                 |    0    | size of the border bars in pixels; if left as 0 then the value will be calculated from the current fontSize  |
+| borderEnableAutoHide          |  false  | hide border if it has zero tabs                                                                              |
+| borderEnableDrop              |  true   | allow user to drag tabs into this border                                                                     |
+| borderAutoSelectTabWhenOpen   |  true   | whether to select new/moved tabs in border when the border is already open                                   |
+| borderAutoSelectTabWhenClosed |  false  | whether to select new/moved tabs in border when the border is curently closed                                |
+| borderClassName               |  null   |                                                                                                              |
+| borderSize                    |   200   | initial width in pixels for left/right borders, height for top/bottom borders                                |
+| borderMinSize                 |    0    | minimum width in pixels for left/right borders, height for top/bottom borders                                |
+| tabSetMinHeight               |    0    | minimum width (in px) for all tabsets                                                                        |
+| tabSetMinWidth                |    0    | minimum height (in px) for all tabsets                                                                       |
+| tabSetTabLocation             |   top   | show tabs in location top or bottom                                                                          |
+| rootOrientationVertical       |  false  | the top level 'row' will layout horizontally by default, set this option true to make it layout vertically   |
 
 
 ## Row Attributes
@@ -411,7 +352,9 @@ Inherited defaults will take their value from the associated global attributes (
 | enableRename | *inherited* | allow user to rename tabs by double clicking |
 | enableFloat | *inherited* | enable popout (in popout capable browser) |
 | floating | false | |
-| className | *inherited* | |
+| className | *inherited* | class applied to tab button |
+| contentClassName | *inherited* | class applied to tab content |
+| tabsetClassName | undefined | class applied to parent tabset when this is the only tab and it is stretched to fill the tabset |
 | icon | *inherited* | |
 | enableRenderOnDemand | *inherited* | whether to avoid rendering component until tab is visible |
 | borderWidth | *inherited* | width when added to border, -1 will use border size |
@@ -429,33 +372,35 @@ Inherited defaults will take their value from the associated global attributes (
 
 Note: tabsets can be dynamically created as tabs are moved and deleted when all their tabs are removed (unless enableDeleteWhenEmpty is false).
 
-| Attribute | Default | Description  |
-| ------------- |:-------------:| -----|
-| type | tabset | |
-| weight | 100 | relative weight for sizing of this tabset in parent row |
-| width | null | preferred pixel width |
-| height | null | preferred pixel height |
-| name | null | named tabsets will show a header bar above the tabs |
-| config | null | a place to hold json config used in your own code |
-| selected | 0 | index of selected/visible tab in tabset |
-| maximized | false | whether tabset is currently maximized to fill view |
-| enableClose | false | allow user to close tabset via a close button |
-| id | auto generated | |
-| children | *required* | a list of tab nodes |
-| enableDeleteWhenEmpty | *inherited* | |
-| enableDrop | *inherited* | allow user to drag tabs into this tabset |
-| enableDrag | *inherited* | allow user to drag tabs out this tabset |
-| enableDivide | *inherited* | allow user to drag tabs to region of this tabset, splitting into new tabset |
-| enableMaximize | *inherited* | allow user to maximize tabset to fill view via maximize button |
-| autoSelectTab | *inherited* | whether to select new/moved tabs in tabset |
-| classNameTabStrip | *inherited* | |
-| classNameHeader | *inherited* | |
-| enableTabStrip | *inherited* | enable tab strip and allow multiple tabs in this tabset |
-| headerHeight | *inherited* | |
-| tabStripHeight | *inherited* | height in pixels of tab strip |
-| tabLocation | *inherited* | show tabs in location top or bottom |
-| minHeight | *inherited* | minimum width (in px) for this tabset |
-| minWidth | *inherited* | minimum height (in px) for this tabset |
+| Attribute               | Default | Description                                                                                                                                                                            |
+|-------------------------|:-------------:|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| type                    | tabset |                                                                                                                                                                                        |
+| weight                  | 100 | relative weight for sizing of this tabset in parent row                                                                                                                                |
+| width                   | null | preferred pixel width                                                                                                                                                                  |
+| height                  | null | preferred pixel height                                                                                                                                                                 |
+| name                    | null | named tabsets will show a header bar above the tabs                                                                                                                                    |
+| config                  | null | a place to hold json config used in your own code                                                                                                                                      |
+| selected                | 0 | index of selected/visible tab in tabset                                                                                                                                                |
+| active                  | false | whether tabset is currently active; this attribute can only be used in the initial configuration, to change the active tabset you should use the `setActiveTabset` action on the model |
+| maximized               | false | whether tabset is currently maximized to fill view                                                                                                                                     |
+| enableClose             | false | allow user to close tabset via a close button                                                                                                                                          |
+| id                      | auto generated |                                                                                                                                                                                        |
+| children                | *required* | a list of tab nodes                                                                                                                                                                    |
+| enableDeleteWhenEmpty   | *inherited* |                                                                                                                                                                                        |
+| enableDrop              | *inherited* | allow user to drag tabs into this tabset                                                                                                                                               |
+| enableDrag              | *inherited* | allow user to drag tabs out this tabset                                                                                                                                                |
+| enableDivide            | *inherited* | allow user to drag tabs to region of this tabset, splitting into new tabset                                                                                                            |
+| enableMaximize          | *inherited* | allow user to maximize tabset to fill view via maximize button                                                                                                                         |
+| enableSingleTabStretch |  *inherited* | if the tabset has only a single tab then stretch the single tab to fill area and display in a header style                                                                             |
+| autoSelectTab           | *inherited* | whether to select new/moved tabs in tabset                                                                                                                                             |
+| classNameTabStrip       | *inherited* |                                                                                                                                                                                        |
+| classNameHeader         | *inherited* |                                                                                                                                                                                        |
+| enableTabStrip          | *inherited* | enable tab strip and allow multiple tabs in this tabset                                                                                                                                |
+| headerHeight            | *inherited* |                                                                                                                                                                                        |
+| tabStripHeight          | *inherited* | height in pixels of tab strip                                                                                                                                                          |
+| tabLocation             | *inherited* | show tabs in location top or bottom                                                                                                                                                    |
+| minHeight               | *inherited* | minimum height (in px) for this tabset                                                                                                                                                 |
+| minWidth                | *inherited* | minimum width (in px) for this tabset                                                                                                                                                  |
 
 ## Border Attributes
 
@@ -479,8 +424,7 @@ Inherited defaults will take their value from the associated global attributes (
 | enableDrop | *inherited* | |
 | autoSelectTabWhenOpen | *inherited* | whether to select new/moved tabs in border when the border is already open |
 | autoSelectTabWhenClosed | *inherited* | whether to select new/moved tabs in border when the border is currently closed |
-| className | *inherited* | |
-
+| className | *inherited* | class applied to tab button |
 
 ## Model Actions
 
@@ -614,6 +558,7 @@ To build the npm distribution run 'yarn build', this will create the artifacts i
 | Name | Repository |
 | ------------- |:-------------|
 | rc-dock | https://github.com/ticlo/rc-dock | 
+| Dockview | https://dockview.dev/ | 
 | lumino | https://github.com/jupyterlab/lumino | 
 | golden-layout | https://github.com/golden-layout/golden-layout |
 | react-mosaic | https://github.com/nomcopter/react-mosaic |

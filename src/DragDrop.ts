@@ -47,7 +47,7 @@ export class DragDrop {
     /** @internal */
     private _active: boolean = false; // drag and drop is in progress, can be used on ios to prevent body scrolling (see demo)
     /** @internal */
-    private _document?: HTMLDocument;
+    private _document?: Document;
     /** @internal */
     private _rootElement?: HTMLElement | undefined;
     /** @internal */
@@ -153,6 +153,10 @@ export class DragDrop {
             return;
         }
 
+        if (this._dragging) {
+            return;
+        }
+
         this._lastEvent = event;
 
         if (currentDocument) {
@@ -168,10 +172,6 @@ export class DragDrop {
 
         const posEvent = this._getLocationEvent(event);
         this.addGlass(fDragCancel);
-
-        if (this._dragging) {
-            console.warn("this._dragging true on startDrag should never happen");
-        }
 
         if (event) {
             this._startX = posEvent.clientX;
@@ -228,7 +228,7 @@ export class DragDrop {
 
     /** @internal */
     private _onKeyPress(event: KeyboardEvent) {
-        if (event.keyCode === 27) {
+        if (event.code === 'Escape') {
             // esc
             this._onDragCancel();
         }

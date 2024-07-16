@@ -4,7 +4,7 @@ import { Actions } from "../model/Actions";
 import { TabNode } from "../model/TabNode";
 import { TabSetNode } from "../model/TabSetNode";
 import { showPopup } from "../PopupMenu";
-import { IIcons, ILayoutCallbacks, ITitleObject } from "./Layout";
+import { IIcons, ILayoutCallbacks, ITabSetRenderValues, ITitleObject } from "./Layout";
 import { TabButton } from "./TabButton";
 import { useTabOverflow } from "./TabOverflowHook";
 import { Orientation } from "../Orientation";
@@ -102,6 +102,11 @@ export const TabSet = (props: ITabSetProps) => {
         event.stopPropagation();
     };
 
+    const onCloseTab = (event: React.MouseEvent<HTMLElement, MouseEvent>) => {
+        layout.doAction(Actions.deleteTab(node.getChildren()[0].getId()));
+        event.stopPropagation();
+    };
+
     const onFloatTab = (event: React.MouseEvent<HTMLElement, MouseEvent>) => {
         if (selectedTabNode !== undefined) {
             layout.doAction(Actions.floatTab(selectedTabNode.getId()));
@@ -160,15 +165,22 @@ export const TabSet = (props: ITabSetProps) => {
     let headerButtons: React.ReactNode[] = [];
 
     // allow customization of header contents and buttons
-    const renderState = { headerContent: node.getName(), stickyButtons, buttons, headerButtons };
+    const renderState : ITabSetRenderValues = { headerContent: node.getName(), stickyButtons, buttons, headerButtons, overflowPosition: undefined };
     layout.customizeTabSet(node, renderState);
     const headerContent = renderState.headerContent;
     stickyButtons = renderState.stickyButtons;
     buttons = renderState.buttons;
     headerButtons = renderState.headerButtons;
 
+    const isTabStretch = node.isEnableSingleTabStretch() && node.getChildren().length === 1;
+    const showClose = (isTabStretch && ((node.getChildren()[0] as TabNode).isEnableClose())) || node.isEnableClose();
+
+    if (renderState.overflowPosition === undefined) {
+        renderState.overflowPosition = stickyButtons.length;
+    }
+    
     if (stickyButtons.length > 0) {
-        if (tabsTruncated) {
+        if (tabsTruncated || isTabStretch) {
             buttons = [...stickyButtons, ...buttons];
         } else {
             tabs.push(<div
@@ -183,8 +195,7 @@ export const TabSet = (props: ITabSetProps) => {
             </div>);
         }
     }
-
-    let toolbar;
+    
     if (hiddenTabs.length > 0) {
         const overflowTitle = layout.i18nName(I18nLabel.Overflow_Menu_Tooltip);
         let overflowContent;
@@ -196,7 +207,7 @@ export const TabSet = (props: ITabSetProps) => {
                 <div className={cm(CLASSES.FLEXLAYOUT__TAB_BUTTON_OVERFLOW_COUNT)}>{hiddenTabs.length}</div>
             </>);
         }
-        buttons.push(
+        buttons.splice(Math.min(renderState.overflowPosition, buttons.length), 0,
             <button
                 key="overflowbutton"
                 data-layout-path={path + "/button/overflow"}
@@ -250,8 +261,8 @@ export const TabSet = (props: ITabSetProps) => {
         );
     }
 
-    if (!node.isMaximized() && node.isEnableClose()) {
-        const title = layout.i18nName(I18nLabel.Close_Tabset);
+    if (!node.isMaximized() && showClose) {
+        const title = isTabStretch ? layout.i18nName(I18nLabel.Close_Tab) : layout.i18nName(I18nLabel.Close_Tabset);
         const btns = showHeader ? headerButtons : buttons;
         btns.push(
             <button
@@ -259,7 +270,7 @@ export const TabSet = (props: ITabSetProps) => {
                 data-layout-path={path + "/button/close"}
                 title={title}
                 className={cm(CLASSES.FLEXLAYOUT__TAB_TOOLBAR_BUTTON) + " " + cm(CLASSES.FLEXLAYOUT__TAB_TOOLBAR_BUTTON_CLOSE)}
-                onClick={onClose}
+                onClick={isTabStretch ? onCloseTab : onClose}
                 onMouseDown={onInterceptMouseDown}
                 onTouchStart={onInterceptMouseDown}
             >
@@ -268,7 +279,7 @@ export const TabSet = (props: ITabSetProps) => {
         );
     }
 
-    toolbar = (
+    const toolbar = (
         <div key="toolbar" ref={toolbarRef}
             className={cm(CLASSES.FLEXLAYOUT__TAB_TOOLBAR)}
             onMouseDown={onInterceptMouseDown}
@@ -294,6 +305,13 @@ export const TabSet = (props: ITabSetProps) => {
 
     if (node.isMaximized() && !showHeader) {
         tabStripClasses += " " + cm(CLASSES.FLEXLAYOUT__TABSET_MAXIMIZED);
+    }
+
+    if (isTabStretch) {
+        const tabNode = node.getChildren()[0] as TabNode; 
+        if (tabNode.getTabSetClassName() !== undefined) {
+            tabStripClasses += " " + tabNode.getTabSetClassName();
+        }
     }
 
     if (showHeader) {
@@ -345,7 +363,7 @@ export const TabSet = (props: ITabSetProps) => {
             onTouchStart={onMouseDown}>
             <div ref={tabbarInnerRef} className={cm(CLASSES.FLEXLAYOUT__TABSET_TABBAR_INNER) + " " + cm(CLASSES.FLEXLAYOUT__TABSET_TABBAR_INNER_ + node.getTabLocation())}>
                 <div
-                    style={{ left: position }}
+                    style={{ left: position, width: (isTabStretch? "100%": "10000px")}}
                     className={cm(CLASSES.FLEXLAYOUT__TABSET_TABBAR_INNER_TAB_CONTAINER) + " " + cm(CLASSES.FLEXLAYOUT__TABSET_TABBAR_INNER_TAB_CONTAINER_ + node.getTabLocation())}
                 >
                     {tabs}

@@ -103,8 +103,17 @@ export const TabButton = (props: ITabButtonProps) => {
     const updateRect = () => {
         // record position of tab in node
         const layoutRect = layout.getDomRect();
-        const r = selfRef.current!.getBoundingClientRect();
-        node._setTabRect(new Rect(r.left - layoutRect.left, r.top - layoutRect.top, r.width, r.height));
+        const r = selfRef.current?.getBoundingClientRect();
+        if (r && layoutRect) {
+            node._setTabRect(
+                new Rect(
+                    r.left - layoutRect.left,
+                    r.top - layoutRect.top,
+                    r.width,
+                    r.height
+                )
+            );
+        }
     };
 
     const onTextBoxMouseDown = (event: React.MouseEvent<HTMLInputElement> | React.TouchEvent<HTMLInputElement>) => {
@@ -113,11 +122,10 @@ export const TabButton = (props: ITabButtonProps) => {
     };
 
     const onTextBoxKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
-        // console.log(event, event.keyCode);
-        if (event.keyCode === 27) {
+        if (event.code === 'Escape') {
             // esc
             layout.setEditingTab(undefined);
-        } else if (event.keyCode === 13) {
+        } else if (event.code === 'Enter') {
             // enter
             layout.setEditingTab(undefined);
             layout.doAction(Actions.renameTab(node.getId(), (event.target as HTMLInputElement).value));
@@ -127,14 +135,17 @@ export const TabButton = (props: ITabButtonProps) => {
     const cm = layout.getClassName;
     const parentNode = node.getParent() as TabSetNode;
 
-    let baseClassName = CLASSES.FLEXLAYOUT__TAB_BUTTON;
+    const isStretch = parentNode.isEnableSingleTabStretch() && parentNode.getChildren().length === 1;
+    let baseClassName = isStretch ? CLASSES.FLEXLAYOUT__TAB_BUTTON_STRETCH : CLASSES.FLEXLAYOUT__TAB_BUTTON;
     let classNames = cm(baseClassName);
     classNames += " " + cm(baseClassName + "_" + parentNode.getTabLocation());
 
-    if (selected) {
-        classNames += " " + cm(baseClassName + "--selected");
-    } else {
-        classNames += " " + cm(baseClassName + "--unselected");
+    if (!isStretch) {
+        if (selected) {
+            classNames += " " + cm(baseClassName + "--selected");
+        } else {
+            classNames += " " + cm(baseClassName + "--unselected");
+        }
     }
 
     if (node.getClassName() !== undefined) {
@@ -169,7 +180,7 @@ export const TabButton = (props: ITabButtonProps) => {
         );
     }
 
-    if (node.isEnableClose()) {
+    if (node.isEnableClose() && !isStretch) {
         const closeTitle = layout.i18nName(I18nLabel.Close_Tab);
         renderState.buttons.push(
             <div

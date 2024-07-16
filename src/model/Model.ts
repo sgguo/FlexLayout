@@ -52,15 +52,16 @@ export class Model {
         const attributeDefinitions = new AttributeDefinitions();
 
         attributeDefinitions.add("legacyOverflowMenu", false).setType(Attribute.BOOLEAN);
-
-        // splitter
-        attributeDefinitions.add("splitterSize", -1).setType(Attribute.NUMBER);
-        attributeDefinitions.add("splitterExtra", 0).setType(Attribute.NUMBER);
         attributeDefinitions.add("enableEdgeDock", true).setType(Attribute.BOOLEAN);
         attributeDefinitions.add("rootOrientationVertical", false).setType(Attribute.BOOLEAN);
         attributeDefinitions.add("marginInsets", { top: 0, right: 0, bottom: 0, left: 0 })
             .setType("IInsets");
         attributeDefinitions.add("enableUseVisibility", false).setType(Attribute.BOOLEAN);
+        attributeDefinitions.add("enableRotateBorderIcons", true).setType(Attribute.BOOLEAN);
+
+        // splitter
+        attributeDefinitions.add("splitterSize", -1).setType(Attribute.NUMBER);
+        attributeDefinitions.add("splitterExtra", 0).setType(Attribute.NUMBER);
 
         // tab
         attributeDefinitions.add("tabEnableClose", true).setType(Attribute.BOOLEAN);
@@ -68,6 +69,7 @@ export class Model {
         attributeDefinitions.add("tabEnableFloat", false).setType(Attribute.BOOLEAN);
         attributeDefinitions.add("tabEnableDrag", true).setType(Attribute.BOOLEAN);
         attributeDefinitions.add("tabEnableRename", true).setType(Attribute.BOOLEAN);
+        attributeDefinitions.add("tabContentClassName", undefined).setType(Attribute.STRING);
         attributeDefinitions.add("tabClassName", undefined).setType(Attribute.STRING);
         attributeDefinitions.add("tabIcon", undefined).setType(Attribute.STRING);
         attributeDefinitions.add("tabEnableRenderOnDemand", true).setType(Attribute.BOOLEAN);
@@ -82,6 +84,7 @@ export class Model {
         attributeDefinitions.add("tabSetEnableDivide", true).setType(Attribute.BOOLEAN);
         attributeDefinitions.add("tabSetEnableMaximize", true).setType(Attribute.BOOLEAN);
         attributeDefinitions.add("tabSetEnableClose", false).setType(Attribute.BOOLEAN);
+        attributeDefinitions.add("tabSetEnableSingleTabStretch", false).setType(Attribute.BOOLEAN);
         attributeDefinitions.add("tabSetAutoSelectTab", true).setType(Attribute.BOOLEAN);
         attributeDefinitions.add("tabSetClassNameTabStrip", undefined).setType(Attribute.STRING);
         attributeDefinitions.add("tabSetClassNameHeader", undefined).setType(Attribute.STRING);
@@ -207,6 +210,10 @@ export class Model {
         return this._attributes.enableUseVisibility as boolean;
     }
 
+    isEnableRotateBorderIcons() {
+        return this._attributes.enableRotateBorderIcons as boolean;
+    }
+
     /**
      * Gets the
      * @returns {BorderSet|*}
@@ -245,6 +252,24 @@ export class Model {
      */
     getNodeById(id: string): Node | undefined {
         return this._idMap[id];
+    }
+
+    /**
+     * Finds the first/top left tab set of the given node.
+     * @param node The top node you want to begin searching from, deafults to the root node
+     * @returns The first Tab Set
+     */
+    getFirstTabSet(node = this._root as Node): Node
+    {
+        const child = node.getChildren()[0];
+        if (child instanceof TabSetNode)
+        {
+            return child;
+        }
+        else
+        {
+            return this.getFirstTabSet(child);
+        }
     }
 
     /**
@@ -348,9 +373,13 @@ export class Model {
                 break;
             }
             case Actions.SET_ACTIVE_TABSET: {
-                const tabsetNode = this._idMap[action.data.tabsetNode];
-                if (tabsetNode instanceof TabSetNode) {
-                    this._activeTabSet = tabsetNode;
+                if (action.data.tabsetNode === undefined) {
+                    this._activeTabSet = undefined;
+                } else {
+                    const tabsetNode = this._idMap[action.data.tabsetNode];
+                    if (tabsetNode instanceof TabSetNode) {
+                        this._activeTabSet = tabsetNode;
+                    }
                 }
                 break;
             }

@@ -40,6 +40,7 @@ export interface IGlobalAttributes {
 	borderMinSize?: number; // default: 0
 	borderSize?: number; // default: 200
 	enableEdgeDock?: boolean; // default: true
+	enableRotateBorderIcons?: boolean; // default: true
 	enableUseVisibility?: boolean; // default: false
 	legacyOverflowMenu?: boolean; // default: false
 	marginInsets?: IInsets; // default: {"top":0,"right":0,"bottom":0,"left":0}
@@ -50,6 +51,7 @@ export interface IGlobalAttributes {
 	tabBorderWidth?: number; // default: -1
 	tabClassName?: string;
 	tabCloseType?: ICloseType; // default: 1
+	tabContentClassName?: string;
 	tabDragSpeed?: number; // default: 0.3
 	tabEnableClose?: boolean; // default: true
 	tabEnableDrag?: boolean; // default: true
@@ -67,6 +69,7 @@ export interface IGlobalAttributes {
 	tabSetEnableDrag?: boolean; // default: true
 	tabSetEnableDrop?: boolean; // default: true
 	tabSetEnableMaximize?: boolean; // default: true
+	tabSetEnableSingleTabStretch?: boolean; // default: false
 	tabSetEnableTabStrip?: boolean; // default: true
 	tabSetHeaderHeight?: number; // default: 0
 	tabSetMarginInsets?: IInsets; // default: {"top":0,"right":0,"bottom":0,"left":0}
@@ -94,6 +97,7 @@ export interface ITabSetAttributes {
 	enableDrag?: boolean; // default: true - inherited from global tabSetEnableDrag
 	enableDrop?: boolean; // default: true - inherited from global tabSetEnableDrop
 	enableMaximize?: boolean; // default: true - inherited from global tabSetEnableMaximize
+	enableSingleTabStretch?: boolean; // default: false - inherited from global tabSetEnableSingleTabStretch
 	enableTabStrip?: boolean; // default: true - inherited from global tabSetEnableTabStrip
 	headerHeight?: number; // default: 0 - inherited from global tabSetHeaderHeight
 	height?: number;
@@ -108,6 +112,10 @@ export interface ITabSetAttributes {
 	type: "tabset";
 	weight?: number; // default: 100
 	width?: number;
+	
+	// special attributes are read from initial json but must subseqently be set on the model
+	maximized?: boolean; // default false
+	active?:boolean; // default false
 }
 export interface ITabAttributes {
 	altName?: string;
@@ -117,6 +125,8 @@ export interface ITabAttributes {
 	closeType?: ICloseType; // default: 1 - inherited from global tabCloseType
 	component?: string;
 	config?: any;
+	contentClassName?: string; //  - inherited from global tabContentClassName
+	tabsetClassName?: string; // default undefined
 	enableClose?: boolean; // default: true - inherited from global tabEnableClose
 	enableDrag?: boolean; // default: true - inherited from global tabEnableDrag
 	enableFloat?: boolean; // default: false - inherited from global tabEnableFloat

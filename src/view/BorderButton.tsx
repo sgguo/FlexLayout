@@ -103,8 +103,17 @@ export const BorderButton = (props: IBorderButtonProps) => {
     const updateRect = () => {
         // record position of tab in node
         const layoutRect = layout.getDomRect();
-        const r = selfRef.current!.getBoundingClientRect();
-        node._setTabRect(new Rect(r.left - layoutRect.left, r.top - layoutRect.top, r.width, r.height));
+        const r = selfRef.current?.getBoundingClientRect();
+        if (r && layoutRect) {
+            node._setTabRect(
+                new Rect(
+                    r.left - layoutRect.left,
+                    r.top - layoutRect.top,
+                    r.width,
+                    r.height
+                )
+            );
+        }
     };
 
     const onTextBoxMouseDown = (event: React.MouseEvent<HTMLInputElement> | React.TouchEvent<HTMLInputElement>) => {
@@ -113,11 +122,10 @@ export const BorderButton = (props: IBorderButtonProps) => {
     };
 
     const onTextBoxKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
-        // console.log(event, event.keyCode);
-        if (event.keyCode === 27) {
+        if (event.code === 'Escape') {
             // esc
             layout.setEditingTab(undefined);
-        } else if (event.keyCode === 13) {
+        } else if (event.code === 'Enter') {
             // enter
             layout.setEditingTab(undefined);
             layout.doAction(Actions.renameTab(node.getId(), (event.target as HTMLInputElement).value));
@@ -137,7 +145,16 @@ export const BorderButton = (props: IBorderButtonProps) => {
         classNames += " " + node.getClassName();
     }
 
-    const renderState = getRenderStateEx(layout, node, iconFactory, titleFactory);
+    let iconAngle = 0;
+    if (node.getModel().isEnableRotateBorderIcons() === false) {
+        if (border === "left") {
+            iconAngle = 90;
+        } else if (border === "right") {
+            iconAngle = -90;
+        }
+    }
+
+    const renderState = getRenderStateEx(layout, node, iconFactory, titleFactory, iconAngle);
 
     let content = renderState.content ? (
         <div className={cm(CLASSES.FLEXLAYOUT__BORDER_BUTTON_CONTENT)}>

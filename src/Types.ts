@@ -26,7 +26,12 @@ export enum CLASSES {
     FLEXLAYOUT__BORDER_TOOLBAR_BUTTON_FLOAT = "flexlayout__border_toolbar_button-float",
 
     FLEXLAYOUT__DRAG_RECT = "flexlayout__drag_rect",
+    
     FLEXLAYOUT__EDGE_RECT = "flexlayout__edge_rect",
+    FLEXLAYOUT__EDGE_RECT_TOP = "flexlayout__edge_rect_top",
+    FLEXLAYOUT__EDGE_RECT_LEFT = "flexlayout__edge_rect_left",
+    FLEXLAYOUT__EDGE_RECT_BOTTOM = "flexlayout__edge_rect_bottom",
+    FLEXLAYOUT__EDGE_RECT_RIGHT = "flexlayout__edge_rect_right",
 
     FLEXLAYOUT__ERROR_BOUNDARY_CONTAINER = "flexlayout__error_boundary_container",
     FLEXLAYOUT__ERROR_BOUNDARY_CONTENT = "flexlayout__error_boundary_content",
@@ -68,6 +73,7 @@ export enum CLASSES {
     FLEXLAYOUT__TAB_BORDER = "flexlayout__tab_border",
     FLEXLAYOUT__TAB_BORDER_ = "flexlayout__tab_border_",
     FLEXLAYOUT__TAB_BUTTON = "flexlayout__tab_button",
+    FLEXLAYOUT__TAB_BUTTON_STRETCH = "flexlayout__tab_button_stretch",
     FLEXLAYOUT__TAB_BUTTON_CONTENT = "flexlayout__tab_button_content",
     FLEXLAYOUT__TAB_BUTTON_LEADING = "flexlayout__tab_button_leading",
     FLEXLAYOUT__TAB_BUTTON_OVERFLOW = "flexlayout__tab_button_overflow",
