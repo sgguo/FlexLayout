@@ -61,7 +61,7 @@ export class LayoutWindow {
     }
 
     /** @internal */
-    public set layout(value: LayoutInternal) {
+    public set layout(value: LayoutInternal | undefined) {
         this._layout = value;
     }
 
