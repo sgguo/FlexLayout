@@ -1,5 +1,7 @@
 {
-	"global": {},
+	"global": {
+		"tabSetEnableSingleTabStretch": true
+	},
 	"borders": [],
 	"layout": {
 		"type": "row",
@@ -8,7 +10,7 @@
 			{
 				"type": "tabset",
 				"id": "2",
-				"weight": 50,
+				"weight": 0.2,
 				"children": [
 					{
 						"type": "tab",
@@ -22,7 +24,7 @@
 			{
 				"type": "tabset",
 				"id": "4",
-				"weight": 50,
+				"weight": 0.2,
 				"children": [
 					{
 						"type": "tab",

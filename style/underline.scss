@@ -45,9 +45,11 @@ $font-family: Roboto, Arial, sans-serif !default;
         --color-tabset-header-background: var(--color-background);
         --color-tabset-header: var(--color-text);
 
+        --color-border-tab-content: var(--color-background);
         --color-border-background: var(--color-background);
         --color-border-divider-line: var(--color-3);
 
+        --color-tab-content: var(--color-background);
         --color-tab-selected: var(--color-text);
         --color-tab-selected-background: transparent;
         --color-tab-unselected: gray;
@@ -74,7 +76,8 @@ $font-family: Roboto, Arial, sans-serif !default;
         --color-popup-selected: var(--color-text);
         --color-popup-selected-background: var(--color-3);
 
-        --color-edge-marker: gray;
+        --color-edge-marker: #aaa;
+        --color-edge-icon: #555;
 
         --color-underline: rgb(65, 105, 225);
         --color-underline-hover: #aaa;
@@ -126,6 +129,12 @@ $font-family: Roboto, Arial, sans-serif !default;
 
 @mixin toolbar_button_hovered_mixin {
     background-color:var(--color-2);
+}
+
+@mixin tab_button_stretch_mixin {
+}
+
+@mixin tab_button_stretch_hovered_mixin {
 }
 
 @mixin border_mixin {

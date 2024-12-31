@@ -44,9 +44,11 @@ $font_family: Roboto, Arial, sans-serif !default;
         --color-tabset-header-background: var(--color-1);
         --color-tabset-header: var(--color-text);
 
+        --color-border-tab-content: var(--color-background);
         --color-border-background: var(--color-1);
         --color-border-divider-line: var(--color-3);
 
+        --color-tab-content: var(--color-background);
         --color-tab-selected: var(--color-text);
         --color-tab-selected-background: var(--color-3);
         --color-tab-unselected: gray;
@@ -73,7 +75,8 @@ $font_family: Roboto, Arial, sans-serif !default;
         --color-popup-selected: var(--color-text);
         --color-popup-selected-background: var(--color-3);
 
-        --color-edge-marker: gray;
+        --color-edge-marker: #aaa;
+        --color-edge-icon: #555;
     }
 }
 
@@ -148,6 +151,12 @@ $font_family: Roboto, Arial, sans-serif !default;
 }
 
 @mixin border_button_hovered_mixin {
+}
+
+@mixin tab_button_stretch_mixin {
+}
+
+@mixin tab_button_stretch_hovered_mixin {
 }
 
 @mixin splitter_mixin {
