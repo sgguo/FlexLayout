@@ -31,6 +31,7 @@
         "build:umd:min": "webpack --mode=production --config webpack_build_min.config.js",
         "build:demo": "webpack",
         "lint:eslint": "eslint src/*",
+        "clean": "rm -r dist",
         "doc": "typedoc --out typedoc --exclude \"**/examples/**/*.tsx\" --excludeInternal --disableSources --excludePrivate --excludeProtected --readme none ./src",
         "css": "sass style/rounded.scss  style/rounded.css && sass style/underline.scss style/underline.css && sass style/gray.scss style/gray.css && sass style/light.scss style/light.css && sass style/light.scss test/style/light.css && sass style/dark.scss style/dark.css"
     },
