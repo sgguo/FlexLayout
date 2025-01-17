@@ -17,7 +17,7 @@ export function getRenderStateEx(
     iconAngle?: number
 ) {
     let leadingContent = undefined;
-    let titleContent: React.ReactNode = node.getName();
+    let titleContent: React.ReactNode = layout.i18nName(node.getName());
     let name = node.getName();
     if (iconAngle === undefined) {
         iconAngle = 0;
@@ -142,7 +142,7 @@ export function copyInlineStyles(source: HTMLElement, target: HTMLElement): bool
     if (sourceStyle === targetStyle) return false;
 
     // console.log("copyInlineStyles", sourceStyle);
-    
+
     if (sourceStyle) {
         // Set the style attribute on the target element
         target.setAttribute('style', sourceStyle);

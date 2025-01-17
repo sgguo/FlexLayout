@@ -59,7 +59,7 @@ export interface ILayoutProps {
     /** function called with default css class name, return value is class name that will be used. Mainly for use with css modules. */
     classNameMapper?: (defaultClassName: string) => string;
     /** function called for each I18nLabel to allow user translation, currently used for tab and tabset move messages, return undefined to use default values */
-    i18nMapper?: (id: I18nLabel, param?: string) => string | undefined;
+    i18nMapper?: (id: string, param?: string) => string | undefined;
     /** if left undefined will do simple check based on userAgent */
     supportsPopout?: boolean | undefined;
     /** URL of popout window relative to origin, defaults to popout.html */
@@ -925,7 +925,7 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
         }
     }
 
-    i18nName(id: I18nLabel, param?: string) {
+    i18nName(id: string, param?: string) {
         let message;
         if (this.props.i18nMapper) {
             message = this.props.i18nMapper(id, param);
