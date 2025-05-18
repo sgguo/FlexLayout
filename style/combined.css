@@ -12,7 +12,7 @@
   --color-drag2: rgb(119, 166, 119);
   --color-drag1-background: rgba(95, 134, 196, 0.1);
   --color-drag2-background: rgba(119, 166, 119, 0.075);
-  --font-size: medium;
+  --font-size: small;
   --font-family: Roboto, Arial, sans-serif;
   --color-overflow: gray;
   --color-icon: gray;
@@ -913,14 +913,14 @@
 
 /* ======================== End of Base Classes =========================== */
 .flexlayout__theme_light {
-  /* 
-      light theme overrides 
+  /*
+      light theme overrides
   */
 }
 
 .flexlayout__theme_dark {
-  /* 
-      dark theme overrides 
+  /*
+      dark theme overrides
   */
 }
 .flexlayout__theme_dark .flexlayout__tabset_header {
@@ -948,8 +948,8 @@
 }
 
 .flexlayout__theme_gray {
-  /* 
-      gray theme overrides 
+  /*
+      gray theme overrides
   */
 }
 .flexlayout__theme_gray .flexlayout__tabset-selected {
@@ -980,8 +980,8 @@
 }
 
 .flexlayout__theme_underline {
-  /* 
-      underline theme overrides 
+  /*
+      underline theme overrides
   */
 }
 .flexlayout__theme_underline .flexlayout__tab_button {
@@ -1012,8 +1012,8 @@
 }
 
 .flexlayout__theme_rounded {
-  /* 
-      rounded theme overrides 
+  /*
+      rounded theme overrides
   */
 }
 .flexlayout__theme_rounded .flexlayout__tabset {

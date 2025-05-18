@@ -681,8 +681,8 @@
 }
 
 /* ======================== End of Base Classes =========================== */
-/* 
-    gray theme overrides 
+/*
+    gray theme overrides
 */
 .flexlayout__tabset-selected {
   background-image: linear-gradient(var(--color-background), var(--color-4));
