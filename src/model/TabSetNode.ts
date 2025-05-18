@@ -209,6 +209,10 @@ export class TabSetNode extends Node implements IDraggable, IDropTarget {
         return this.getAttr("autoSelectTab") as boolean;
     }
 
+    isEnableTabScrollbar() {
+        return this.getAttr("enableTabScrollbar") as boolean;
+    }
+
     getClassNameTabStrip() {
         return this.getAttr("classNameTabStrip") as string | undefined;
     }
@@ -338,16 +342,20 @@ export class TabSetNode extends Node implements IDraggable, IDropTarget {
                         p = this.tabStripRect.x;
                     }
                     childCenter = r.x + r.width / 2;
-                    if (x >= p && x < childCenter && y > r.y && y < r.getBottom()) {
+                    if (p <= x && x < childCenter && r.y < y && y < r.getBottom()) {
                         const dockLocation = DockLocation.CENTER;
                         const outlineRect = new Rect(r.x - 2, r.y, 3, r.height);
-                        dropInfo = new DropInfo(this, outlineRect, dockLocation, i, CLASSES.FLEXLAYOUT__OUTLINE_RECT);
-                        break;
+                        if (this.rect.x < r.x && r.x < this.rect.getRight()) {
+                            dropInfo = new DropInfo(this, outlineRect, dockLocation, i, CLASSES.FLEXLAYOUT__OUTLINE_RECT);
+                            break;
+                        } else {
+                            return undefined;
+                        }
                     }
                     p = childCenter;
                 }
             }
-            if (dropInfo == null) {
+            if (dropInfo == null && r.getRight() < this.rect!.getRight()) {
                 const dockLocation = DockLocation.CENTER;
                 const outlineRect = new Rect(r.getRight() - 2, yy, 3, h);
                 dropInfo = new DropInfo(this, outlineRect, dockLocation, this.children.length, CLASSES.FLEXLAYOUT__OUTLINE_RECT);
@@ -560,7 +568,7 @@ export class TabSetNode extends Node implements IDraggable, IDropTarget {
         );
 
         attributeDefinitions.addInherited("enableTabWrap", "tabSetEnableTabWrap").setDescription(
-            `show tabs in location top or bottom`
+            `wrap tabs onto multiple lines`
         );
         attributeDefinitions.addInherited("tabLocation", "tabSetTabLocation").setDescription(
             `the location of the tabs either top or bottom`
@@ -571,6 +579,11 @@ export class TabSetNode extends Node implements IDraggable, IDropTarget {
         attributeDefinitions.addInherited("enableActiveIcon", "tabSetEnableActiveIcon").setType(Attribute.BOOLEAN).setDescription(
             `whether the active icon (*) should be displayed when the tabset is active`
         );
+
+        attributeDefinitions.addInherited("enableTabScrollbar", "tabSetEnableTabScrollbar").setType(Attribute.BOOLEAN).setDescription(
+            `whether to show a mini scrollbar for the tabs`
+        );
+
         return attributeDefinitions;
     }
 

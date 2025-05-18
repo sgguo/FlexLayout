@@ -3,17 +3,20 @@
         "outDir": "./dist/",
         "sourceMap": true,
         "noImplicitAny": true,
-        "module": "ES2020",
-        "target": "ES6",
+        "target": "ESNext",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
         "stripInternal": true,
         "alwaysStrict": true,
-        "moduleResolution": "node",
         "forceConsistentCasingInFileNames": true,
         "noImplicitReturns": true,
         "strict": true,
         "noUnusedLocals": true,
-        "jsx": "react",
-        "skipLibCheck": true
+        "jsx": "react-jsx",
+        "skipLibCheck": true,
+        "types": ["vitest/globals"],
+        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true
     },
-    "include": ["./src/**/*", "./examples/demo/*"]
+    "include": ["./src/**/*", "./demo/**/*", "./tests/**/*", "./tests-playwright/**/*"]
 }

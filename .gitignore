@@ -1,15 +1,15 @@
 node_modules/
-declarations/
-bundles/
-.idea/
+types/
 dist/
-lib/
-out/
-fonts/
+.idea/
+demo/dist/
 @private/
 .DS_Store
 typedoc/
-style/dark.css.map
-style/gray.css.map
-style/light.css.map
-test/style/light.css.map
+style/*.css.map
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

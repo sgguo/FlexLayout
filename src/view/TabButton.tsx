@@ -93,8 +93,7 @@ export const TabButton = (props: ITabButtonProps) => {
     const onClose = (event: React.MouseEvent<HTMLElement>) => {
         if (isClosable()) {
             layout.doAction(Actions.deleteTab(node.getId()));
-        } else {
-            onClick();
+            event.stopPropagation();
         }
     };
 
@@ -110,7 +109,7 @@ export const TabButton = (props: ITabButtonProps) => {
         if (event.code === 'Escape') {
             // esc
             layout.setEditingTab(undefined);
-        } else if (event.code === 'Enter') {
+        } else if (event.code === 'Enter' || event.code === 'NumpadEnter') {
             // enter
             layout.setEditingTab(undefined);
             layout.doAction(Actions.renameTab(node.getId(), (event.target as HTMLInputElement).value));
@@ -121,7 +120,7 @@ export const TabButton = (props: ITabButtonProps) => {
     const parentNode = node.getParent() as TabSetNode;
 
     const isStretch = parentNode.isEnableSingleTabStretch() && parentNode.getChildren().length === 1;
-    let baseClassName = isStretch ? CLASSES.FLEXLAYOUT__TAB_BUTTON_STRETCH : CLASSES.FLEXLAYOUT__TAB_BUTTON;
+    const baseClassName = isStretch ? CLASSES.FLEXLAYOUT__TAB_BUTTON_STRETCH : CLASSES.FLEXLAYOUT__TAB_BUTTON;
     let classNames = cm(baseClassName);
     classNames += " " + cm(baseClassName + "_" + parentNode.getTabLocation());
 

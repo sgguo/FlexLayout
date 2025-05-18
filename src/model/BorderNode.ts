@@ -35,8 +35,6 @@ export class BorderNode extends Node implements IDropTarget {
     private static attributeDefinitions: AttributeDefinitions = BorderNode.createAttributeDefinitions();
 
     /** @internal */
-    private outerRect: Rect = Rect.empty();
-    /** @internal */
     private contentRect: Rect = Rect.empty();
     /** @internal */
     private tabHeaderRect: Rect = Rect.empty();
@@ -159,6 +157,10 @@ export class BorderNode extends Node implements IDropTarget {
         }
     }
 
+    isEnableTabScrollbar() {
+        return this.getAttr("enableTabScrollbar") as boolean;
+    }
+
     /** @internal */
     setSelected(index: number) {
         this.attributes.selected = index;
@@ -172,16 +174,6 @@ export class BorderNode extends Node implements IDropTarget {
     /** @internal */
     setTabHeaderRect(r: Rect) {
         this.tabHeaderRect = r;
-    }
-
-    /** @internal */
-    getOuterRect() {
-        return this.outerRect;
-    }
-
-    /** @internal */
-    setOuterRect(r: Rect) {
-        this.outerRect = r;
     }
 
     /** @internal */
@@ -308,8 +300,8 @@ export class BorderNode extends Node implements IDropTarget {
             if (!dragNode.canDockInto(dragNode, dropInfo)) {
                 return undefined;
             }
-        } else if (this.getSelected() !== -1 && this.outerRect!.contains(x, y)) {
-            const outlineRect = this.outerRect;
+        } else if (this.getSelected() !== -1 && this.contentRect!.contains(x, y)) {
+            const outlineRect = this.contentRect;
             dropInfo = new DropInfo(this, outlineRect!, dockLocation, -1, CLASSES.FLEXLAYOUT__OUTLINE_RECT);
             if (!dragNode.canDockInto(dragNode, dropInfo)) {
                 return undefined;
@@ -445,6 +437,9 @@ export class BorderNode extends Node implements IDropTarget {
         );
         attributeDefinitions.addInherited("enableAutoHide", "borderEnableAutoHide").setType(Attribute.BOOLEAN).setDescription(
             `hide border if it has zero tabs`
+        );
+        attributeDefinitions.addInherited("enableTabScrollbar", "borderEnableTabScrollbar").setType(Attribute.BOOLEAN).setDescription(
+            `whether to show a mini scrollbar for the tabs`
         );
         return attributeDefinitions;
     }

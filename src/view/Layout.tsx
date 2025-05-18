@@ -19,7 +19,6 @@ import { TabSetNode } from "../model/TabSetNode";
 import { BorderTab } from "./BorderTab";
 import { BorderTabSet } from "./BorderTabSet";
 import { DragContainer } from "./DragContainer";
-import { ErrorBoundary } from "./ErrorBoundary";
 import { PopoutWindow } from "./PopoutWindow";
 import { AsterickIcon, CloseIcon, EdgeIcon, MaximizeIcon, OverflowIcon, PopoutIcon, RestoreIcon } from "./Icons";
 import { Overlay } from "./Overlay";
@@ -35,6 +34,8 @@ export interface ILayoutProps {
     model: Model;
     /** factory function for creating the tab components */
     factory: (node: TabNode) => React.ReactNode;
+    /** sets a top level class name on popout windows */
+    popoutClassName?: string;
     /** object mapping keys among close, maximize, restore, more, popout to React nodes to use in place of the default icons, can alternatively return functions for creating the React nodes */
     icons?: IIcons;
     /** function called whenever the layout generates an action to update the model (allows for intercepting actions before they are dispatched to the model, for example, asking the user to confirm a tab close.) Returning undefined from the function will halt the action, otherwise return the action to continue */
@@ -85,7 +86,7 @@ export interface ILayoutProps {
  */
 export class Layout extends React.Component<React.PropsWithChildren<ILayoutProps>> {
     /** @internal */
-    private selfRef: React.RefObject<LayoutInternal>;
+    private selfRef: React.RefObject<LayoutInternal | null>;
     /** @internal */
     private revision: number; // so LayoutInternal knows this is a parent render (used for optimization)
 
@@ -190,12 +191,13 @@ interface ILayoutInternalState {
 export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayoutInternalState> {
     public static dragState: DragState | undefined = undefined;
 
-    private selfRef: React.RefObject<HTMLDivElement>;
-    private moveablesRef: React.RefObject<HTMLDivElement>;
-    private findBorderBarSizeRef: React.RefObject<HTMLDivElement>;
-    private mainRef: React.RefObject<HTMLDivElement>;
+    private selfRef: React.RefObject<HTMLDivElement | null>;
+    private moveablesRef: React.RefObject<HTMLDivElement | null>;
+    private findBorderBarSizeRef: React.RefObject<HTMLDivElement | null>;
+    private mainRef: React.RefObject<HTMLDivElement | null>;
     private previousModel?: Model;
-    private orderedIds: string[];
+    private orderedTabIds: string[];
+    private orderedTabMoveableIds: string[];
     private moveableElementMap = new Map<string, HTMLElement>();
     private dropInfo: DropInfo | undefined;
     private outlineDiv?: HTMLElement;
@@ -220,7 +222,8 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
     constructor(props: ILayoutInternalProps) {
         super(props);
 
-        this.orderedIds = [];
+        this.orderedTabIds = [];
+        this.orderedTabMoveableIds = [];
         this.selfRef = React.createRef<HTMLDivElement>();
         this.moveablesRef = React.createRef<HTMLDivElement>();
         this.mainRef = React.createRef<HTMLDivElement>();
@@ -330,6 +333,10 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
         if (this.selfRef.current) {
             this.resizeObserver?.unobserve(this.selfRef.current);
         }
+
+        if (this.isMainWindow) {
+            this.props.model.removeChangeListener(this.onModelChange);
+        }
         this.styleObserver?.disconnect();
     }
 
@@ -354,17 +361,18 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
         const outer = this.renderBorders(inner);
 
         const tabs = this.renderTabs();
-        const reorderedTabs = this.reorderComponents(tabs, this.orderedIds);
+        const reorderedTabs = this.reorderComponents(tabs, this.orderedTabIds);
 
         let floatingWindows = null;
-        let tabMoveables = null;
+        let reorderedTabMoveables = null;
         let tabStamps = null;
         let metricElements = null;
 
         if (this.isMainWindow) {
             floatingWindows = this.renderWindows();
             metricElements = this.renderMetricsElements();
-            tabMoveables = this.renderTabMoveables();
+            const tabMoveables = this.renderTabMoveables();
+            reorderedTabMoveables = this.reorderComponents(tabMoveables, this.orderedTabMoveableIds);
             tabStamps = <div key="__tabStamps__" className={this.getClassName(CLASSES.FLEXLAYOUT__LAYOUT_TAB_STAMPS)}>
                 {this.renderTabStamps()}
             </div>;
@@ -384,7 +392,7 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
                 <Overlay key="__overlay__" layout={this} show={this.state.showOverlay} />
                 {outer}
                 {reorderedTabs}
-                {tabMoveables}
+                {reorderedTabMoveables}
                 {tabStamps}
                 {this.state.portal}
                 {floatingWindows}
@@ -406,7 +414,7 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
             const borderSetContentComponents = new Map<DockLocation, React.ReactNode>();
             for (const [_, location] of DockLocation.values) {
                 const border = borders.get(location);
-                const showBorder = border && (
+                const showBorder = border && border.isShowing() && (
                     !border.isAutoHide() ||
                     (border.isAutoHide() && (border.getChildren().length > 0 || this.state.showHiddenBorder === location)));
                 if (showBorder) {
@@ -538,7 +546,9 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
                             onSetWindow={this.onSetWindow}
                             onCloseWindow={this.onCloseWindow}
                         >
-                            <LayoutInternal {...this.props} windowId={windowId} mainLayout={this} />
+                            <div className={this.props.popoutClassName}>
+                                <LayoutInternal {...this.props} windowId={windowId} mainLayout={this} />
+                            </div>
                         </PopoutWindow>
                     );
                     i++;
@@ -549,7 +559,7 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
     }
 
     renderTabMoveables() {
-        const tabMoveables: React.ReactNode[] = [];
+        const tabMoveables = new Map<string, React.ReactNode>();
 
         this.props.model.visitNodes((node) => {
             if (node instanceof TabNode) {
@@ -559,18 +569,21 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
                 const selected = child.isSelected();
                 const rect = (child.getParent() as BorderNode | TabSetNode).getContentRect();
 
+                const visible = selected || !child.isEnableRenderOnDemand();
                 // only render first time if size >0
-                const renderTab = child.isRendered() ||
-                    ((selected || !child.isEnableRenderOnDemand()) && (rect.width > 0 && rect.height > 0));
+                const renderTab = child.isRendered() || (visible && (rect.width > 0 && rect.height > 0));
 
                 if (renderTab) {
-                    //  console.log("rendertab", child.getName(), this.props.renderRevision);
                     const key = child.getId() + (child.isEnableWindowReMount() ? child.getWindowId() : "");
-                    tabMoveables.push(createPortal(
-                        <SizeTracker rect={rect} selected={child.isSelected()} forceRevision={this.state.forceRevision} tabsRevision={this.props.renderRevision} key={key}>
-                            <ErrorBoundary message={this.i18nName(I18nLabel.Error_rendering_component)}>
-                                {this.props.factory(child)}
-                            </ErrorBoundary>
+                    tabMoveables.set(node.getId(), createPortal(
+                        <SizeTracker
+                            layout={this}
+                            node={child}
+                            rect={rect}
+                            visible={visible}
+                            forceRevision={this.state.forceRevision}
+                            tabsRevision={this.props.renderRevision}
+                            key={key}>
                         </SizeTracker>
                         , element, key));
 
@@ -608,18 +621,13 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
                 const renderTab = child.isRendered() || selected || !child.isEnableRenderOnDemand();
 
                 if (renderTab) {
-                    // const rect = (child.getParent() as BorderNode | TabSetNode).getContentRect();
-                    // const key = child.getId();
-
                     tabs.set(child.getId(), (
-                        // <SizeTracker rect={rect} forceRevision={this.state.forceRevision} key={key}>
                         <Tab
                             key={child.getId()}
                             layout={this}
                             path={path}
                             node={child}
                             selected={selected} />
-                        // </SizeTracker>
                     ));
                 }
             }
@@ -752,12 +760,14 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
     }
 
     updateRect = () => {
-        const rect = this.getDomRect()
-        if (!rect.equals(this.state.rect) && rect.width !== 0 && rect.height !== 0) {
-            // console.log("updateRect", rect.floor());
-            this.setState({ rect });
-            if (this.windowId !== Model.MAIN_WINDOW_ID) {
-                this.redrawInternal("rect updated");
+        if (this.selfRef.current) {
+            const rect = Rect.fromDomRect(this.selfRef.current.getBoundingClientRect());
+            if (!rect.equals(this.state.rect) && rect.width !== 0 && rect.height !== 0) {
+                // console.log("updateRect", rect.floor());
+                this.setState({ rect });
+                if (this.windowId !== Model.MAIN_WINDOW_ID) {
+                    this.redrawInternal("rect updated");
+                }
             }
         }
     };
@@ -802,6 +812,7 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
     }
 
     getDomRect() {
+        // must get on demand, since page may have scrolled
         if (this.selfRef.current) {
             return Rect.fromDomRect(this.selfRef.current.getBoundingClientRect());
         } else {
@@ -1022,7 +1033,7 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
             }
             if (!rendered) {
                 if (isSafari()) { // safari doesnt render the offscreen tabstamps
-                    this.setDragComponent(event, <TabButtonStamp node={node as TabNode} layout={this}/>, x,y);
+                    this.setDragComponent(event, <TabButtonStamp node={node as TabNode} layout={this} />, x, y);
                 } else {
                     event.dataTransfer!.setDragImage((node as TabNode).getTabStamp()!, x, y);
                 }
@@ -1033,7 +1044,7 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
 
 
     public setDragComponent(event: DragEvent, component: React.ReactNode, x: number, y: number) {
-        let dragElement: JSX.Element = (
+        const dragElement = (
             <div style={{ position: "unset" }}
                 className={this.getClassName(CLASSES.FLEXLAYOUT__LAYOUT) + " " + this.getClassName(CLASSES.FLEXLAYOUT__DRAG_RECT)}>
                 {component}
@@ -1151,7 +1162,7 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
                 this.setState({ showEdges: this.props.model.isEnableEdgeDock() });
             }
 
-            const clientRect = this.selfRef.current?.getBoundingClientRect()!;
+            const clientRect = this.selfRef.current!.getBoundingClientRect()!;
             const r = new Rect(
                 event.clientX - (clientRect.left),
                 event.clientY - (clientRect.top),
@@ -1174,7 +1185,7 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
 
             this.checkForBorderToShow(pos.x, pos.y);
 
-            let dropInfo = this.props.model.findDropTargetNode(this.windowId, LayoutInternal.dragState!.dragNode!, pos.x, pos.y);
+            const dropInfo = this.props.model.findDropTargetNode(this.windowId, LayoutInternal.dragState!.dragNode!, pos.x, pos.y);
             if (dropInfo) {
                 this.dropInfo = dropInfo;
                 if (this.outlineDiv) {
@@ -1223,8 +1234,8 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
 
     // *************************** End Drag Drop *************************************
 }
-
-export const FlexLayoutVersion = "0.8.1";
+declare const __VERSION__: string;
+export const FlexLayoutVersion = __VERSION__;
 
 export type DragRectRenderCallback = (
     content: React.ReactNode | undefined,
@@ -1247,6 +1258,8 @@ export type ShowOverflowMenuCallback = (
 export type TabSetPlaceHolderCallback = (node: TabSetNode) => React.ReactNode;
 
 export interface ITabSetRenderValues {
+    /** a component to be placed before the tabs */
+    leading: React.ReactNode;
     /** components that will be added after the tabs */
     stickyButtons: React.ReactNode[];
     /** components that will be added at the end of the tabset */

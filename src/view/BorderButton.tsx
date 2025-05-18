@@ -86,8 +86,7 @@ export const BorderButton = (props: IBorderButtonProps) => {
     const onClose = (event: React.MouseEvent<HTMLElement>) => {
         if (isClosable()) {
             layout.doAction(Actions.deleteTab(node.getId()));
-        } else {
-            onClick();
+            event.stopPropagation();
         }
     };
 
@@ -110,7 +109,7 @@ export const BorderButton = (props: IBorderButtonProps) => {
         if (event.code === 'Escape') {
             // esc
             layout.setEditingTab(undefined);
-        } else if (event.code === 'Enter') {
+        } else if (event.code === 'Enter' || event.code === 'NumpadEnter') {
             // enter
             layout.setEditingTab(undefined);
             layout.doAction(Actions.renameTab(node.getId(), (event.target as HTMLInputElement).value));

@@ -1,4 +1,3 @@
-import * as React from "react";
 import { TabNode } from "../model/TabNode";
 import { LayoutInternal } from "./Layout";
 import { CLASSES } from "../Types";
@@ -16,11 +15,11 @@ export const TabButtonStamp = (props: ITabButtonStampProps) => {
 
     const cm = layout.getClassName;
 
-    let classNames = cm(CLASSES.FLEXLAYOUT__TAB_BUTTON_STAMP);
+    const classNames = cm(CLASSES.FLEXLAYOUT__TAB_BUTTON_STAMP);
 
     const renderState = getRenderStateEx(layout, node);
 
-    let content = renderState.content ? (
+    const content = renderState.content ? (
         <div className={cm(CLASSES.FLEXLAYOUT__TAB_BUTTON_CONTENT)}>
             {renderState.content}
         </div>)

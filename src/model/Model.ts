@@ -16,7 +16,6 @@ import { TabNode } from "./TabNode";
 import { TabSetNode } from "./TabSetNode";
 import { randomUUID } from "./Utils";
 import { LayoutWindow } from "./LayoutWindow";
-import { isOnScreen } from "../view/Utils";
 
 /** @internal */
 export const DefaultMin = 0;
@@ -182,7 +181,7 @@ export class Model {
             case Actions.CLOSE_WINDOW: {
                 const window = this.windows.get(action.data.windowId);
                 if (window) {
-                    this.rootWindow.root?.drop(window?.root!, DockLocation.CENTER, -1);
+                    this.rootWindow.root?.drop(window!.root!, DockLocation.CENTER, -1);
                     this.rootWindow.visitNodes((node, level) => {
                         if (node instanceof RowNode) {
                             node.setWindowId(Model.MAIN_WINDOW_ID);
@@ -406,18 +405,10 @@ export class Model {
             model.borders = BorderSet.fromJson(json.borders, model);
         }
         if (json.popouts) {
-            let i= 0;
-            let top = 100;
-            let left = 100;
             for (const windowId in json.popouts) {
                 const windowJson = json.popouts[windowId];
                 const layoutWindow = LayoutWindow.fromJson(windowJson, model, windowId);
                 model.windows.set(windowId, layoutWindow);
-                // offscreen windows will reload cascaded (since cannot reposition)
-                if (!isOnScreen(layoutWindow.rect)) {
-                    layoutWindow.rect = new Rect(top + i*50, left+ i*50, 600, 400);
-                    i++;
-                }
             }
         }
 
@@ -622,7 +613,7 @@ export class Model {
         Model.attributeDefinitions.pairAttributes("TabNode", TabNode.getAttributeDefinitions());
         Model.attributeDefinitions.pairAttributes("BorderNode", BorderNode.getAttributeDefinitions());
 
-        let sb = [];
+        const sb = [];
         sb.push(Model.attributeDefinitions.toTypescriptInterface("Global", undefined));
         sb.push(RowNode.getAttributeDefinitions().toTypescriptInterface("Row", Model.attributeDefinitions));
         sb.push(TabSetNode.getAttributeDefinitions().toTypescriptInterface("TabSet", Model.attributeDefinitions));
@@ -694,6 +685,7 @@ export class Model {
         attributeDefinitions.add("tabMaxHeight", DefaultMax).setType(Attribute.NUMBER);
         attributeDefinitions.add("tabSetMaxWidth", DefaultMax).setType(Attribute.NUMBER);
         attributeDefinitions.add("tabSetMaxHeight", DefaultMax).setType(Attribute.NUMBER);
+        attributeDefinitions.add("tabSetEnableTabScrollbar", false).setType(Attribute.BOOLEAN);
 
         // border
         attributeDefinitions.add("borderSize", 200).setType(Attribute.NUMBER);
@@ -704,6 +696,7 @@ export class Model {
         attributeDefinitions.add("borderAutoSelectTabWhenClosed", false).setType(Attribute.BOOLEAN);
         attributeDefinitions.add("borderClassName", undefined).setType(Attribute.STRING);
         attributeDefinitions.add("borderEnableAutoHide", false).setType(Attribute.BOOLEAN);
+        attributeDefinitions.add("borderEnableTabScrollbar", false).setType(Attribute.BOOLEAN);
 
         return attributeDefinitions;
     }

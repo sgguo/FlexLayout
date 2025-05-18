@@ -18,6 +18,7 @@ export enum CLASSES {
     FLEXLAYOUT__BORDER_INNER_TAB_CONTAINER = "flexlayout__border_inner_tab_container",
     FLEXLAYOUT__BORDER_INNER_TAB_CONTAINER_ = "flexlayout__border_inner_tab_container_",
     FLEXLAYOUT__BORDER_TAB_DIVIDER = "flexlayout__border_tab_divider",
+    FLEXLAYOUT__BORDER_LEADING = "flexlayout__border_leading",
 
     FLEXLAYOUT__BORDER_SIZER = "flexlayout__border_sizer",
 
@@ -38,7 +39,6 @@ export enum CLASSES {
     FLEXLAYOUT__ERROR_BOUNDARY_CONTENT = "flexlayout__error_boundary_content",
 
     FLEXLAYOUT__FLOATING_WINDOW_CONTENT = "flexlayout__floating_window_content",
-    FLEXLAYOUT__FLOATING_WINDOW_TAB = "flexlayout__floating_window_tab",
 
     FLEXLAYOUT__LAYOUT = "flexlayout__layout",
     FLEXLAYOUT__LAYOUT_MOVEABLES = "flexlayout__layout_moveables",
@@ -69,16 +69,15 @@ export enum CLASSES {
     FLEXLAYOUT__TABSET = "flexlayout__tabset",
     FLEXLAYOUT__TABSET_CONTAINER = "flexlayout__tabset_container",
     FLEXLAYOUT__TABSET_HEADER = "flexlayout__tabset_header",
-    FLEXLAYOUT__TABSET_HEADER_SIZER = "flexlayout__tabset_header_sizer",
     FLEXLAYOUT__TABSET_HEADER_CONTENT = "flexlayout__tabset_header_content",
     FLEXLAYOUT__TABSET_MAXIMIZED = "flexlayout__tabset-maximized",
     FLEXLAYOUT__TABSET_SELECTED = "flexlayout__tabset-selected",
-    FLEXLAYOUT__TABSET_SIZER = "flexlayout__tabset_sizer",
     FLEXLAYOUT__TABSET_TAB_DIVIDER = "flexlayout__tabset_tab_divider",
-
     FLEXLAYOUT__TABSET_CONTENT = "flexlayout__tabset_content",
     FLEXLAYOUT__TABSET_TABBAR_INNER = "flexlayout__tabset_tabbar_inner",
     FLEXLAYOUT__TABSET_TABBAR_INNER_ = "flexlayout__tabset_tabbar_inner_",
+    FLEXLAYOUT__TABSET_LEADING = "flexlayout__tabset_leading",
+   
     FLEXLAYOUT__TABSET_TABBAR_INNER_TAB_CONTAINER = "flexlayout__tabset_tabbar_inner_tab_container",
     FLEXLAYOUT__TABSET_TABBAR_INNER_TAB_CONTAINER_ = "flexlayout__tabset_tabbar_inner_tab_container_",
 
@@ -97,9 +96,6 @@ export enum CLASSES {
     FLEXLAYOUT__TAB_BUTTON_TRAILING = "flexlayout__tab_button_trailing",
     FLEXLAYOUT__TAB_BUTTON_STAMP = "flexlayout__tab_button_stamp",
 
-    FLEXLAYOUT__TAB_FLOATING = "flexlayout__tab_floating",
-    FLEXLAYOUT__TAB_FLOATING_INNER = "flexlayout__tab_floating_inner",
-
     FLEXLAYOUT__TAB_TOOLBAR = "flexlayout__tab_toolbar",
     FLEXLAYOUT__TAB_TOOLBAR_BUTTON = "flexlayout__tab_toolbar_button",
     FLEXLAYOUT__TAB_TOOLBAR_ICON = "flexlayout__tab_toolbar_icon",
@@ -110,5 +106,9 @@ export enum CLASSES {
 
     FLEXLAYOUT__POPUP_MENU_CONTAINER = "flexlayout__popup_menu_container",
     FLEXLAYOUT__POPUP_MENU_ITEM = "flexlayout__popup_menu_item",
+    FLEXLAYOUT__POPUP_MENU_ITEM__SELECTED = "flexlayout__popup_menu_item--selected",
     FLEXLAYOUT__POPUP_MENU = "flexlayout__popup_menu",
+
+    FLEXLAYOUT__MINI_SCROLLBAR = "flexlayout__mini_scrollbar",
+    FLEXLAYOUT__MINI_SCROLLBAR_CONTAINER = "flexlayout__mini_scrollbar_container",
 }
