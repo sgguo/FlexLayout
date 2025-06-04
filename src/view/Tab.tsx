@@ -123,13 +123,28 @@ export const Tab = (props: ITabProps) => {
         className += " " + node.getContentClassName();
     }
 
-    // Tab content caching logic
+    // Get the factory function
+    const factory = layout.getFactory();
+    
+    // Simple cache based on tab ID since we only have one layout
     let tabContent = layout.tabContentCache.get(node.getId());
     if (!tabContent) {
-        // You may want to replace this with your actual tab content creation logic
-        tabContent = <div>{node.getName()}</div>;
+        // Create new content with memoization to prevent unnecessary re-renders
+        tabContent = React.createElement(
+            React.memo(
+                () => React.createElement(
+                    React.Fragment,
+                    null,
+                    factory(node)
+                )
+            ),
+            { key: node.getId() }
+        );
         layout.tabContentCache.set(node.getId(), tabContent);
     }
+
+    // Cleanup cache on unmount - not needed for single layout
+    // Cache cleanup is handled by the close event listener above
 
     return (
         <>
