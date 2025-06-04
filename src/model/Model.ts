@@ -50,8 +50,6 @@ export class Model {
     private windows: Map<string, LayoutWindow>;
     /** @internal */
     private rootWindow: LayoutWindow;
-    /** @internal */
-    private tabContentCache = new Map<string, { content: React.ReactNode }>();
 
     /**
      * 'private' constructor. Use the static method Model.fromJson(json) to create a model
