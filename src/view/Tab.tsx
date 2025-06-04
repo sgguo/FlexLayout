@@ -59,14 +59,14 @@ export const Tab = (props: ITabProps) => {
     // Listen for tab close to clear cache
     React.useEffect(() => {
         const handleClose = () => {
-            layout.removeTabContentFromCache(node.getId());
+            node.getModel().removeTabContent(node.getId());
         };
         node.addListener("close", handleClose);
         return () => {
             // Remove listener if component unmounts
-            // (not strictly necessary for one-time close, but good practice)
+            node.removeEventListener("close");
         };
-    }, [layout, node]);
+    }, [node]);
 
     const onPointerDown = () => {
         const parent = node.getParent()!; // cannot use parentNode here since will be out of date
@@ -123,11 +123,12 @@ export const Tab = (props: ITabProps) => {
         className += " " + node.getContentClassName();
     }
 
-    // Get the factory function
+    // Get the factory function and model
     const factory = layout.getFactory();
+    const model = node.getModel();
     
-    // Simple cache based on tab ID since we only have one layout
-    let tabContent = layout.tabContentCache.get(node.getId());
+    // Get or create tab content using model's shared cache
+    let tabContent = model.getTabContent(node.getId());
     if (!tabContent) {
         // Create new content with memoization to prevent unnecessary re-renders
         tabContent = React.createElement(
@@ -140,11 +141,8 @@ export const Tab = (props: ITabProps) => {
             ),
             { key: node.getId() }
         );
-        layout.tabContentCache.set(node.getId(), tabContent);
+        model.setTabContent(node.getId(), tabContent);
     }
-
-    // Cleanup cache on unmount - not needed for single layout
-    // Cache cleanup is handled by the close event listener above
 
     return (
         <>

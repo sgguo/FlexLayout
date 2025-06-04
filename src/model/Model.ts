@@ -47,6 +47,8 @@ export class Model {
     private windows: Map<string, LayoutWindow>;
     /** @internal */
     private rootWindow: LayoutWindow;
+    /** @internal */
+    private tabContentCache = new Map<string, { content: React.ReactNode }>();
 
     /**
      * 'private' constructor. Use the static method Model.fromJson(json) to create a model
@@ -605,6 +607,21 @@ export class Model {
     /** @internal */
     getOnCreateTabSet() {
         return this.onCreateTabSet;
+    }
+
+    /** Get cached tab content */
+    getTabContent(tabId: string) {
+        return this.tabContentCache.get(tabId)?.content;
+    }
+
+    /** Cache tab content */
+    setTabContent(tabId: string, content: React.ReactNode) {
+        this.tabContentCache.set(tabId, { content });
+    }
+
+    /** Remove tab content from cache */
+    removeTabContent(tabId: string) {
+        this.tabContentCache.delete(tabId);
     }
 
     static toTypescriptInterfaces() {
