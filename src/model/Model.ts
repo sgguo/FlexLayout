@@ -28,6 +28,9 @@ export const DefaultMax = 99999;
 export class Model {
     static MAIN_WINDOW_ID = "__main_window_id__";
 
+    /** Shared cache across all Model instances */
+    private static sharedTabContentCache = new Map<string, { content: React.ReactNode }>();
+
     /** @internal */
     private static attributeDefinitions: AttributeDefinitions = Model.createAttributeDefinitions();
 
@@ -611,17 +614,17 @@ export class Model {
 
     /** Get cached tab content */
     getTabContent(tabId: string) {
-        return this.tabContentCache.get(tabId)?.content;
+        return Model.sharedTabContentCache.get(tabId)?.content;
     }
 
     /** Cache tab content */
     setTabContent(tabId: string, content: React.ReactNode) {
-        this.tabContentCache.set(tabId, { content });
+        Model.sharedTabContentCache.set(tabId, { content });
     }
 
     /** Remove tab content from cache */
     removeTabContent(tabId: string) {
-        this.tabContentCache.delete(tabId);
+        Model.sharedTabContentCache.delete(tabId);
     }
 
     static toTypescriptInterfaces() {
