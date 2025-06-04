@@ -86,6 +86,11 @@ export abstract class Node {
         this.listeners.delete(event);
     }
 
+    /** @internal */
+    addListener(event: string, callback: (params: any) => void) {
+        this.listeners.set(event, callback);
+    }
+
     abstract toJson(): IJsonRowNode | IJsonBorderNode | IJsonTabSetNode | IJsonTabNode | undefined;
 
     /** @internal */

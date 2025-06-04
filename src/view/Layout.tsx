@@ -219,6 +219,8 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
     private popoutWindowName: string;
     // private renderCount: any;
 
+    private tabContentCache = new Map<string, React.ReactNode>();
+
     constructor(props: ILayoutInternalProps) {
         super(props);
 
@@ -1233,6 +1235,11 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
     }
 
     // *************************** End Drag Drop *************************************
+
+    // Remove tab content from cache when a tab is deleted
+    public removeTabContentFromCache(tabId: string) {
+        this.tabContentCache.delete(tabId);
+    }
 }
 declare const __VERSION__: string;
 export const FlexLayoutVersion = __VERSION__;

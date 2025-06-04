@@ -56,6 +56,18 @@ export const Tab = (props: ITabProps) => {
         }
     });
 
+    // Listen for tab close to clear cache
+    React.useEffect(() => {
+        const handleClose = () => {
+            layout.removeTabContentFromCache(node.getId());
+        };
+        node.addListener("close", handleClose);
+        return () => {
+            // Remove listener if component unmounts
+            // (not strictly necessary for one-time close, but good practice)
+        };
+    }, [layout, node]);
+
     const onPointerDown = () => {
         const parent = node.getParent()!; // cannot use parentNode here since will be out of date
         if (parent instanceof TabSetNode) {
@@ -111,16 +123,25 @@ export const Tab = (props: ITabProps) => {
         className += " " + node.getContentClassName();
     }
 
+    // Tab content caching logic
+    let tabContent = layout.tabContentCache.get(node.getId());
+    if (!tabContent) {
+        // You may want to replace this with your actual tab content creation logic
+        tabContent = <div>{node.getName()}</div>;
+        layout.tabContentCache.set(node.getId(), tabContent);
+    }
+
     return (
         <>
             {overlay}
-
             <div
                 ref={selfRef}
                 style={style}
                 className={className}
                 data-layout-path={path}
-            />
+            >
+                {tabContent}
+            </div>
         </>
     );
 };
