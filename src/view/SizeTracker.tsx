@@ -15,20 +15,9 @@ export interface ISizeTrackerProps {
 }
 
 export const SizeTracker = React.memo(({ layout, node }: ISizeTrackerProps) => {
-    // Get the factory function and model
-    const factory = layout.getFactory();
-    const model = node.getModel();
-
-    // Get or create tab content using model's shared cache
-    let tabContent = model.getTabContent(node.getId());
-    // Create new content with memoization to prevent unnecessary re-renders
-    if (!tabContent) {
-        tabContent = factory(node);
-        model.setTabContent(node.getId(), tabContent);
-    }
     return (
         <ErrorBoundary message={layout.i18nName(I18nLabel.Error_rendering_component)} retryText={layout.i18nName(I18nLabel.Error_rendering_component_retry)}>
-            {tabContent}
+            {layout.props.factory(node)}
         </ErrorBoundary>
     );
 }, arePropsEqual);
