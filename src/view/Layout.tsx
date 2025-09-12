@@ -53,10 +53,12 @@ export interface ILayoutProps {
     /** function called when model has changed */
     onModelChange?: (model: Model, action: Action) => void;
     /** function called when an external object (not a tab) gets dragged onto the layout, with a single dragenter argument. Should return either undefined to reject the drag/drop or an object with keys dragText, jsonDrop, to create a tab via drag (similar to a call to addTabToTabSet). Function onDropis passed the added tabNodeand thedrop DragEvent`, unless the drag was canceled. */
-    onExternalDrag?: (event: React.DragEvent<HTMLElement>) => undefined | {
-        json: any,
-        onDrop?: (node?: Node, event?: React.DragEvent<HTMLElement>) => void
-    };
+    onExternalDrag?: (event: React.DragEvent<HTMLElement>) =>
+        | undefined
+        | {
+              json: any;
+              onDrop?: (node?: Node, event?: React.DragEvent<HTMLElement>) => void;
+          };
     /** function called with default css class name, return value is class name that will be used. Mainly for use with css modules. */
     classNameMapper?: (defaultClassName: string) => string;
     /** function called for each I18nLabel to allow user translation, currently used for tab and tabset move messages, return undefined to use default values */
@@ -86,7 +88,7 @@ export interface ILayoutProps {
  */
 export class Layout extends React.Component<React.PropsWithChildren<ILayoutProps>> {
     /** @internal */
-    private selfRef: React.RefObject<LayoutInternal | null>;
+    private selfRef: React.RefObject<LayoutInternal> | undefined;
     /** @internal */
     private revision: number; // so LayoutInternal knows this is a parent render (used for optimization)
 
@@ -99,7 +101,7 @@ export class Layout extends React.Component<React.PropsWithChildren<ILayoutProps
 
     /** re-render the layout */
     redraw() {
-        this.selfRef.current!.redraw("parent " + this.revision);
+        this.selfRef?.current!.redraw("parent " + this.revision);
     }
 
     /**
@@ -109,7 +111,7 @@ export class Layout extends React.Component<React.PropsWithChildren<ILayoutProps
      * @returns the added tab node or undefined
      */
     addTabToTabSet(tabsetId: string, json: IJsonTabNode): TabNode | undefined {
-        return this.selfRef.current!.addTabToTabSet(tabsetId, json);
+        return this.selfRef?.current!.addTabToTabSet(tabsetId, json);
     }
 
     /**
@@ -121,7 +123,7 @@ export class Layout extends React.Component<React.PropsWithChildren<ILayoutProps
      * @param onDrop a callback to call when the drag is complete
      */
     addTabWithDragAndDrop(event: DragEvent, json: IJsonTabNode, onDrop?: (node?: Node, event?: React.DragEvent<HTMLElement>) => void) {
-        this.selfRef.current!.addTabWithDragAndDrop(event, json, onDrop);
+        this.selfRef?.current!.addTabWithDragAndDrop(event, json, onDrop);
     }
 
     /**
@@ -130,8 +132,8 @@ export class Layout extends React.Component<React.PropsWithChildren<ILayoutProps
      * @param event the drag start event
      * @param node the tab or tabset to drag
      */
-    moveTabWithDragAndDrop(event: DragEvent, node: (TabNode | TabSetNode)) {
-        this.selfRef.current!.moveTabWithDragAndDrop(event, node);
+    moveTabWithDragAndDrop(event: DragEvent, node: TabNode | TabSetNode) {
+        this.selfRef?.current!.moveTabWithDragAndDrop(event, node);
     }
 
     /**
@@ -140,7 +142,7 @@ export class Layout extends React.Component<React.PropsWithChildren<ILayoutProps
      * @returns the added tab node or undefined
      */
     addTabToActiveTabSet(json: IJsonTabNode): TabNode | undefined {
-        return this.selfRef.current!.addTabToActiveTabSet(json);
+        return this.selfRef?.current!.addTabToActiveTabSet(json);
     }
 
     /**
@@ -151,17 +153,17 @@ export class Layout extends React.Component<React.PropsWithChildren<ILayoutProps
      * @param y the x position of the drag cursor on the image
      */
     setDragComponent(event: DragEvent, component: React.ReactNode, x: number, y: number) {
-        this.selfRef.current!.setDragComponent(event, component, x, y);
+        this.selfRef?.current!.setDragComponent(event, component, x, y);
     }
 
     /** Get the root div element of the layout */
     getRootDiv() {
-        return this.selfRef.current!.getRootDiv();
+        return this.selfRef?.current!.getRootDiv();
     }
 
     /** @internal */
     render() {
-        return (<LayoutInternal ref={this.selfRef} {...this.props} renderRevision={this.revision++} />)
+        return <LayoutInternal ref={this.selfRef} {...this.props} renderRevision={this.revision++} />;
     }
 }
 
@@ -191,10 +193,10 @@ interface ILayoutInternalState {
 export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayoutInternalState> {
     public static dragState: DragState | undefined = undefined;
 
-    private selfRef: React.RefObject<HTMLDivElement | null>;
-    private moveablesRef: React.RefObject<HTMLDivElement | null>;
-    private findBorderBarSizeRef: React.RefObject<HTMLDivElement | null>;
-    private mainRef: React.RefObject<HTMLDivElement | null>;
+    private selfRef: React.RefObject<HTMLDivElement> | undefined;
+    private moveablesRef: React.RefObject<HTMLDivElement> | undefined;
+    private findBorderBarSizeRef: React.RefObject<HTMLDivElement> | undefined;
+    private mainRef: React.RefObject<HTMLDivElement> | undefined;
     private previousModel?: Model;
     private orderedTabIds: string[];
     private orderedTabMoveableIds: string[];
@@ -250,7 +252,7 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
             calculatedBorderBarSize: 29,
             layoutRevision: 0,
             forceRevision: 0,
-            showHiddenBorder: DockLocation.CENTER
+            showHiddenBorder: DockLocation.CENTER,
         };
 
         this.isMainWindow = this.windowId === Model.MAIN_WINDOW_ID;
@@ -259,19 +261,19 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
     componentDidMount() {
         this.updateRect();
 
-        this.currentDocument = (this.selfRef.current as HTMLElement).ownerDocument;
+        this.currentDocument = (this.selfRef?.current as HTMLElement).ownerDocument;
         this.currentWindow = this.currentDocument.defaultView!;
 
         this.layoutWindow.window = this.currentWindow;
         this.layoutWindow.toScreenRectFunction = (r) => this.getScreenRect(r);
 
-        this.resizeObserver = new ResizeObserver(entries => {
+        this.resizeObserver = new ResizeObserver((entries) => {
             requestAnimationFrame(() => {
                 this.updateRect();
             });
         });
-        if (this.selfRef.current) {
-            this.resizeObserver.observe(this.selfRef.current);
+        if (this.selfRef?.current) {
+            this.resizeObserver.observe(this.selfRef?.current);
         }
 
         if (this.isMainWindow) {
@@ -284,7 +286,7 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
             });
 
             const sourceElement = this.props.mainLayout!.getRootDiv()!;
-            const targetElement = this.selfRef.current!;
+            const targetElement = this.selfRef!.current!;
 
             copyInlineStyles(sourceElement, targetElement);
 
@@ -296,11 +298,11 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
             });
 
             // Observe changes to the source element's style attribute
-            this.styleObserver.observe(sourceElement, { attributeFilter: ['style'] });
+            this.styleObserver.observe(sourceElement, { attributeFilter: ["style"] });
         }
 
         // allow tabs to overlay when hidden
-        document.addEventListener('visibilitychange', () => {
+        document.addEventListener("visibilitychange", () => {
             for (const [_, layoutWindow] of this.props.model.getwindowsMap()) {
                 const layout = layoutWindow.layout;
                 if (layout) {
@@ -311,7 +313,7 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
     }
 
     componentDidUpdate() {
-        this.currentDocument = (this.selfRef.current as HTMLElement).ownerDocument;
+        this.currentDocument = (this.selfRef?.current as HTMLElement).ownerDocument;
         this.currentWindow = this.currentDocument.defaultView!;
         if (this.isMainWindow) {
             if (this.props.model !== this.previousModel) {
@@ -332,8 +334,8 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
     }
 
     componentWillUnmount() {
-        if (this.selfRef.current) {
-            this.resizeObserver?.unobserve(this.selfRef.current);
+        if (this.selfRef?.current) {
+            this.resizeObserver?.unobserve(this.selfRef?.current);
         }
 
         if (this.isMainWindow) {
@@ -345,7 +347,7 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
     render() {
         // console.log("render", this.windowId, this.state.revision, this.renderCount++);
         // first render will be used to find the size (via selfRef)
-        if (!this.selfRef.current) {
+        if (!this.selfRef?.current) {
             return (
                 <div ref={this.selfRef} className={this.getClassName(CLASSES.FLEXLAYOUT__LAYOUT)}>
                     <div ref={this.moveablesRef} key="__moveables__" className={this.getClassName(CLASSES.FLEXLAYOUT__LAYOUT_MOVEABLES)}></div>
@@ -375,9 +377,11 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
             metricElements = this.renderMetricsElements();
             const tabMoveables = this.renderTabMoveables();
             reorderedTabMoveables = this.reorderComponents(tabMoveables, this.orderedTabMoveableIds);
-            tabStamps = <div key="__tabStamps__" className={this.getClassName(CLASSES.FLEXLAYOUT__LAYOUT_TAB_STAMPS)}>
-                {this.renderTabStamps()}
-            </div>;
+            tabStamps = (
+                <div key="__tabStamps__" className={this.getClassName(CLASSES.FLEXLAYOUT__LAYOUT_TAB_STAMPS)}>
+                    {this.renderTabStamps()}
+                </div>
+            );
         }
 
         return (
@@ -402,23 +406,20 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
         );
     }
 
-    renderBorders(
-        inner: React.ReactNode
-    ) {
+    renderBorders(inner: React.ReactNode) {
         const classMain = this.getClassName(CLASSES.FLEXLAYOUT__LAYOUT_MAIN);
-        const borders = this.props.model.getBorderSet().getBorderMap()
+        const borders = this.props.model.getBorderSet().getBorderMap();
         if (this.isMainWindow && borders.size > 0) {
             inner = (
                 <div className={classMain} ref={this.mainRef}>
                     {inner}
-                </div>);
+                </div>
+            );
             const borderSetComponents = new Map<DockLocation, React.ReactNode>();
             const borderSetContentComponents = new Map<DockLocation, React.ReactNode>();
             for (const [_, location] of DockLocation.values) {
                 const border = borders.get(location);
-                const showBorder = border && border.isShowing() && (
-                    !border.isAutoHide() ||
-                    (border.isAutoHide() && (border.getChildren().length > 0 || this.state.showHiddenBorder === location)));
+                const showBorder = border && border.isShowing() && (!border.isAutoHide() || (border.isAutoHide() && (border.getChildren().length > 0 || this.state.showHiddenBorder === location)));
                 if (showBorder) {
                     borderSetComponents.set(location, <BorderTabSet layout={this} border={border} size={this.state.calculatedBorderBarSize} />);
                     borderSetContentComponents.set(location, <BorderTab layout={this} border={border} show={border.getSelected() !== -1} />);
@@ -476,8 +477,8 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
                     </div>
                 );
             }
-
-        } else { // no borders
+        } else {
+            // no borders
             return (
                 <div className={classMain} ref={this.mainRef} style={{ position: "absolute", top: 0, left: 0, bottom: 0, right: 0, display: "flex" }}>
                     {inner}
@@ -505,26 +506,42 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
             const offset = edgeRectLength / 2;
             const className = this.getClassName(CLASSES.FLEXLAYOUT__EDGE_RECT);
             const radius = 50;
-            edges.push(<div key="North" style={{ top: 0, left: r.width / 2 - offset, width: length, height: width, borderBottomLeftRadius: radius, borderBottomRightRadius: radius }} className={className + " " + this.getClassName(CLASSES.FLEXLAYOUT__EDGE_RECT_TOP)}>
-                <div style={{ transform: "rotate(180deg)" }}>
-                    {arrowIcon}
-                </div>
-            </div>);
-            edges.push(<div key="West" style={{ top: r.height / 2 - offset, left: 0, width: width, height: length, borderTopRightRadius: radius, borderBottomRightRadius: radius }} className={className + " " + this.getClassName(CLASSES.FLEXLAYOUT__EDGE_RECT_LEFT)}>
-                <div style={{ transform: "rotate(90deg)" }}>
-                    {arrowIcon}
-                </div>
-            </div>);
-            edges.push(<div key="South" style={{ top: r.height - width, left: r.width / 2 - offset, width: length, height: width, borderTopLeftRadius: radius, borderTopRightRadius: radius }} className={className + " " + this.getClassName(CLASSES.FLEXLAYOUT__EDGE_RECT_BOTTOM)}>
-                <div>
-                    {arrowIcon}
-                </div>
-            </div>);
-            edges.push(<div key="East" style={{ top: r.height / 2 - offset, left: r.width - width, width: width, height: length, borderTopLeftRadius: radius, borderBottomLeftRadius: radius }} className={className + " " + this.getClassName(CLASSES.FLEXLAYOUT__EDGE_RECT_RIGHT)}>
-                <div style={{ transform: "rotate(-90deg)" }}>
-                    {arrowIcon}
-                </div>
-            </div>);
+            edges.push(
+                <div
+                    key="North"
+                    style={{ top: 0, left: r.width / 2 - offset, width: length, height: width, borderBottomLeftRadius: radius, borderBottomRightRadius: radius }}
+                    className={className + " " + this.getClassName(CLASSES.FLEXLAYOUT__EDGE_RECT_TOP)}
+                >
+                    <div style={{ transform: "rotate(180deg)" }}>{arrowIcon}</div>
+                </div>,
+            );
+            edges.push(
+                <div
+                    key="West"
+                    style={{ top: r.height / 2 - offset, left: 0, width: width, height: length, borderTopRightRadius: radius, borderBottomRightRadius: radius }}
+                    className={className + " " + this.getClassName(CLASSES.FLEXLAYOUT__EDGE_RECT_LEFT)}
+                >
+                    <div style={{ transform: "rotate(90deg)" }}>{arrowIcon}</div>
+                </div>,
+            );
+            edges.push(
+                <div
+                    key="South"
+                    style={{ top: r.height - width, left: r.width / 2 - offset, width: length, height: width, borderTopLeftRadius: radius, borderTopRightRadius: radius }}
+                    className={className + " " + this.getClassName(CLASSES.FLEXLAYOUT__EDGE_RECT_BOTTOM)}
+                >
+                    <div>{arrowIcon}</div>
+                </div>,
+            );
+            edges.push(
+                <div
+                    key="East"
+                    style={{ top: r.height / 2 - offset, left: r.width - width, width: width, height: length, borderTopLeftRadius: radius, borderBottomLeftRadius: radius }}
+                    className={className + " " + this.getClassName(CLASSES.FLEXLAYOUT__EDGE_RECT_RIGHT)}
+                >
+                    <div style={{ transform: "rotate(-90deg)" }}>{arrowIcon}</div>
+                </div>,
+            );
         }
 
         return edges;
@@ -536,7 +553,6 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
             const windows = this.props.model.getwindowsMap();
             let i = 1;
             for (const [windowId, layoutWindow] of windows) {
-
                 if (windowId !== Model.MAIN_WINDOW_ID) {
                     floatingWindows.push(
                         <PopoutWindow
@@ -551,7 +567,7 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
                             <div className={this.props.popoutClassName}>
                                 <LayoutInternal {...this.props} windowId={windowId} mainLayout={this} />
                             </div>
-                        </PopoutWindow>
+                        </PopoutWindow>,
                     );
                     i++;
                 }
@@ -573,21 +589,26 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
 
                 const visible = selected || !child.isEnableRenderOnDemand();
                 // only render first time if size >0
-                const renderTab = child.isRendered() || (visible && (rect.width > 0 && rect.height > 0));
+                const renderTab = child.isRendered() || (visible && rect.width > 0 && rect.height > 0);
 
                 if (renderTab) {
                     const key = child.getId() + (child.isEnableWindowReMount() ? child.getWindowId() : "");
-                    tabMoveables.set(node.getId(), createPortal(
-                        <SizeTracker
-                            layout={this}
-                            node={child}
-                            rect={rect}
-                            visible={visible}
-                            forceRevision={this.state.forceRevision}
-                            tabsRevision={this.props.renderRevision}
-                            key={key}>
-                        </SizeTracker>
-                        , element, key));
+                    tabMoveables.set(
+                        node.getId(),
+                        createPortal(
+                            <SizeTracker
+                                layout={this}
+                                node={child}
+                                rect={rect}
+                                visible={visible}
+                                forceRevision={this.state.forceRevision}
+                                tabsRevision={this.props.renderRevision}
+                                key={key}
+                            ></SizeTracker>,
+                            element,
+                            key,
+                        ),
+                    );
 
                     child.setRendered(renderTab);
                 }
@@ -605,7 +626,7 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
                 const child = node as TabNode;
 
                 // what the tab should look like when dragged (since images need to have been loaded before drag image can be taken)
-                tabStamps.push(<DragContainer key={child.getId()} layout={this} node={child} />)
+                tabStamps.push(<DragContainer key={child.getId()} layout={this} node={child} />);
             }
         });
 
@@ -623,14 +644,7 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
                 const renderTab = child.isRendered() || selected || !child.isEnableRenderOnDemand();
 
                 if (renderTab) {
-                    tabs.set(child.getId(), (
-                        <Tab
-                            key={child.getId()}
-                            layout={this}
-                            path={path}
-                            node={child}
-                            selected={selected} />
-                    ));
+                    tabs.set(child.getId(), <Tab key={child.getId()} layout={this} path={path} node={child} selected={selected} />);
                 }
             }
         });
@@ -646,15 +660,14 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
     }
 
     checkForBorderToShow(x: number, y: number) {
-        const r = this.getBoundingClientRect(this.mainRef.current!);
+        const r = this.getBoundingClientRect(this.mainRef!.current!);
         const c = r.getCenter();
         const margin = edgeRectWidth;
         const offset = edgeRectLength / 2;
 
         let overEdge = false;
         if (this.props.model.isEnableEdgeDock() && this.state.showHiddenBorder === DockLocation.CENTER) {
-            if ((y > c.y - offset && y < c.y + offset) ||
-                (x > c.x - offset && x < c.x + offset)) {
+            if ((y > c.y - offset && y < c.y + offset) || (x > c.x - offset && x < c.x + offset)) {
                 overEdge = true;
             }
         }
@@ -678,7 +691,7 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
     }
 
     updateLayoutMetrics = () => {
-        if (this.findBorderBarSizeRef.current) {
+        if (this.findBorderBarSizeRef?.current) {
             const borderBarSize = this.findBorderBarSizeRef.current.getBoundingClientRect().height;
             if (borderBarSize !== this.state.calculatedBorderBarSize) {
                 this.setState({ calculatedBorderBarSize: borderBarSize });
@@ -741,12 +754,16 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
 
     redraw(type?: string) {
         // console.log("redraw", this.windowId, type);
-        this.mainLayout.setState((state, props) => { return { forceRevision: state.forceRevision + 1 } });
+        this.mainLayout.setState((state, props) => {
+            return { forceRevision: state.forceRevision + 1 };
+        });
     }
 
     redrawInternal(type: string) {
         // console.log("redrawInternal", this.windowId, type);
-        this.mainLayout.setState((state, props) => { return { layoutRevision: state.layoutRevision + 1 } });
+        this.mainLayout.setState((state, props) => {
+            return { layoutRevision: state.layoutRevision + 1 };
+        });
     }
 
     doAction(action: Action): Node | undefined {
@@ -762,8 +779,8 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
     }
 
     updateRect = () => {
-        if (this.selfRef.current) {
-            const rect = Rect.fromDomRect(this.selfRef.current.getBoundingClientRect());
+        if (this.selfRef?.current) {
+            const rect = Rect.fromDomRect(this.selfRef?.current.getBoundingClientRect());
             if (!rect.equals(this.state.rect) && rect.width !== 0 && rect.height !== 0) {
                 // console.log("updateRect", rect.floor());
                 this.setState({ rect });
@@ -783,14 +800,14 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
     }
 
     getMoveableContainer() {
-        return this.moveablesRef.current;
+        return this.moveablesRef!.current;
     }
 
     getMoveableElement(id: string) {
         let moveableElement = this.moveableElementMap.get(id);
         if (moveableElement === undefined) {
             moveableElement = document.createElement("div");
-            this.moveablesRef.current!.appendChild(moveableElement);
+            this.moveablesRef!.current!.appendChild(moveableElement);
             moveableElement.className = CLASSES.FLEXLAYOUT__TAB_MOVEABLE;
             this.moveableElementMap.set(id, moveableElement);
         }
@@ -815,8 +832,8 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
 
     getDomRect() {
         // must get on demand, since page may have scrolled
-        if (this.selfRef.current) {
-            return Rect.fromDomRect(this.selfRef.current.getBoundingClientRect());
+        if (this.selfRef?.current) {
+            return Rect.fromDomRect(this.selfRef?.current.getBoundingClientRect());
         } else {
             return Rect.empty();
         }
@@ -827,11 +844,11 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
     }
 
     getRootDiv() {
-        return this.selfRef.current;
+        return this.selfRef?.current;
     }
 
     getMainElement() {
-        return this.mainRef.current;
+        return this.mainRef?.current;
     }
 
     getFactory() {
@@ -866,8 +883,7 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
         this.doAction(Actions.closeWindow(windowLayout.windowId));
     };
 
-    onSetWindow = (windowLayout: LayoutWindow, window: Window) => {
-    };
+    onSetWindow = (windowLayout: LayoutWindow, window: Window) => {};
 
     getScreenRect(inRect: Rect) {
         const rect = inRect.clone();
@@ -920,19 +936,13 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
         this.doAction(Actions.maximizeToggle(tabsetNode.getId(), this.getWindowId()));
     }
 
-    customizeTab(
-        tabNode: TabNode,
-        renderValues: ITabRenderValues,
-    ) {
+    customizeTab(tabNode: TabNode, renderValues: ITabRenderValues) {
         if (this.props.onRenderTab) {
             this.props.onRenderTab(tabNode, renderValues);
         }
     }
 
-    customizeTabSet(
-        tabSetNode: TabSetNode | BorderNode,
-        renderValues: ITabSetRenderValues,
-    ) {
+    customizeTabSet(tabSetNode: TabSetNode | BorderNode, renderValues: ITabSetRenderValues) {
         if (this.props.onRenderTabSet) {
             this.props.onRenderTabSet(tabSetNode, renderValues);
         }
@@ -974,8 +984,6 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
         enablePointerOnIFrames(!show, this.currentDocument!);
     }
 
-
-
     // *************************** Start Drag Drop *************************************
 
     addTabWithDragAndDrop(event: DragEvent, json: IJsonTabNode, onDrop?: (node?: Node, event?: React.DragEvent<HTMLElement>) => void) {
@@ -983,7 +991,7 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
         LayoutInternal.dragState = new DragState(this.mainLayout, DragSource.Add, tempNode, json, onDrop);
     }
 
-    moveTabWithDragAndDrop(event: DragEvent, node: (TabNode | TabSetNode)) {
+    moveTabWithDragAndDrop(event: DragEvent, node: TabNode | TabSetNode) {
         this.setDragNode(event, node);
     }
 
@@ -992,7 +1000,7 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
         // Note: can only set (very) limited types on android! so cannot set json
         // Note: must set text/plain for android to allow drag,
         //  so just set a simple message indicating its a flexlayout drag (this is not used anywhere else)
-        event.dataTransfer!.setData('text/plain', "--flexlayout--");
+        event.dataTransfer!.setData("text/plain", "--flexlayout--");
         event.dataTransfer!.effectAllowed = "copyMove";
         event.dataTransfer!.dropEffect = "move";
 
@@ -1034,7 +1042,8 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
                 }
             }
             if (!rendered) {
-                if (isSafari()) { // safari doesnt render the offscreen tabstamps
+                if (isSafari()) {
+                    // safari doesnt render the offscreen tabstamps
                     this.setDragComponent(event, <TabButtonStamp node={node as TabNode} layout={this} />, x, y);
                 } else {
                     event.dataTransfer!.setDragImage((node as TabNode).getTabStamp()!, x, y);
@@ -1043,17 +1052,14 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
         }
     };
 
-
-
     public setDragComponent(event: DragEvent, component: React.ReactNode, x: number, y: number) {
         const dragElement = (
-            <div style={{ position: "unset" }}
-                className={this.getClassName(CLASSES.FLEXLAYOUT__LAYOUT) + " " + this.getClassName(CLASSES.FLEXLAYOUT__DRAG_RECT)}>
+            <div style={{ position: "unset" }} className={this.getClassName(CLASSES.FLEXLAYOUT__LAYOUT) + " " + this.getClassName(CLASSES.FLEXLAYOUT__DRAG_RECT)}>
                 {component}
             </div>
         );
 
-        const tempDiv = this.currentDocument!.createElement('div');
+        const tempDiv = this.currentDocument!.createElement("div");
         tempDiv.setAttribute("data-layout-path", "/drag-rectangle");
         tempDiv.style.position = "absolute";
         tempDiv.style.left = "-10000px";
@@ -1092,14 +1098,14 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
         if (this.dragEnterCount === 1) {
             this.onDragEnter(event);
         }
-    }
+    };
 
     onDragLeaveRaw = (event: React.DragEvent<HTMLElement>) => {
         this.dragEnterCount--;
         if (this.dragEnterCount === 0) {
             this.onDragLeave(event);
         }
-    }
+    };
 
     clearDragMain() {
         // console.log("clear drag main");
@@ -1120,7 +1126,7 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
         this.dragEnterCount = 0;
         this.dragging = false;
         if (this.outlineDiv) {
-            this.selfRef.current!.removeChild(this.outlineDiv);
+            this.selfRef?.current!.removeChild(this.outlineDiv);
             this.outlineDiv = undefined;
         }
     }
@@ -1128,7 +1134,8 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
     onDragEnter = (event: React.DragEvent<HTMLElement>) => {
         // console.log("onDragEnter", this.windowId, this.dragEnterCount);
 
-        if (!LayoutInternal.dragState && this.props.onExternalDrag) { // not internal dragging
+        if (!LayoutInternal.dragState && this.props.onExternalDrag) {
+            // not internal dragging
             const externalDrag = this.props.onExternalDrag!(event);
             if (externalDrag) {
                 const tempNode = TabNode.fromJson(externalDrag.json, this.props.model, false);
@@ -1148,7 +1155,7 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
             event.preventDefault();
 
             this.dropInfo = undefined;
-            const rootdiv = this.selfRef.current;
+            const rootdiv = this.selfRef?.current;
             this.outlineDiv = this.currentDocument!.createElement("div");
             this.outlineDiv.className = this.getClassName(CLASSES.FLEXLAYOUT__OUTLINE_RECT);
             this.outlineDiv.style.visibility = "hidden";
@@ -1164,22 +1171,18 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
                 this.setState({ showEdges: this.props.model.isEnableEdgeDock() });
             }
 
-            const clientRect = this.selfRef.current!.getBoundingClientRect()!;
-            const r = new Rect(
-                event.clientX - (clientRect.left),
-                event.clientY - (clientRect.top),
-                1, 1
-            );
+            const clientRect = this.selfRef!.current!.getBoundingClientRect()!;
+            const r = new Rect(event.clientX - clientRect.left, event.clientY - clientRect.top, 1, 1);
             r.positionElement(this.outlineDiv);
         }
-    }
+    };
 
     onDragOver = (event: React.DragEvent<HTMLElement>) => {
         if (this.dragging && !this.isDraggingOverWindow) {
             // console.log("onDragOver");
 
             event.preventDefault();
-            const clientRect = this.selfRef.current?.getBoundingClientRect();
+            const clientRect = this.selfRef?.current?.getBoundingClientRect();
             const pos = {
                 x: event.clientX - (clientRect?.left ?? 0),
                 y: event.clientY - (clientRect?.top ?? 0),
@@ -1197,7 +1200,7 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
                 }
             }
         }
-    }
+    };
 
     onDragLeave = (event: React.DragEvent<HTMLElement>) => {
         // console.log("onDragLeave", this.windowId, this.dragging);
@@ -1208,7 +1211,7 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
 
             this.clearDragLocal();
         }
-    }
+    };
 
     onDrop = (event: React.DragEvent<HTMLElement>) => {
         // console.log("ondrop", this.windowId, this.dragging, Layout.dragState);
@@ -1232,7 +1235,7 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
             this.mainLayout.clearDragMain();
         }
         this.dragEnterCount = 0; // must set to zero here ref sublayouts
-    }
+    };
 
     // *************************** End Drag Drop *************************************
 
@@ -1244,16 +1247,9 @@ export class LayoutInternal extends React.Component<ILayoutInternalProps, ILayou
 declare const __VERSION__: string;
 export const FlexLayoutVersion = __VERSION__;
 
-export type DragRectRenderCallback = (
-    content: React.ReactNode | undefined,
-    node?: Node,
-    json?: IJsonTabNode
-) => React.ReactNode | undefined;
+export type DragRectRenderCallback = (content: React.ReactNode | undefined, node?: Node, json?: IJsonTabNode) => React.ReactNode | undefined;
 
-export type NodeMouseEvent = (
-    node: TabNode | TabSetNode | BorderNode,
-    event: React.MouseEvent<HTMLElement, MouseEvent>
-) => void;
+export type NodeMouseEvent = (node: TabNode | TabSetNode | BorderNode, event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
 
 export type ShowOverflowMenuCallback = (
     node: TabSetNode | BorderNode,
@@ -1287,14 +1283,14 @@ export interface ITabRenderValues {
 }
 
 export interface IIcons {
-    close?: (React.ReactNode | ((tabNode: TabNode) => React.ReactNode));
-    closeTabset?: (React.ReactNode | ((tabSetNode: TabSetNode) => React.ReactNode));
-    popout?: (React.ReactNode | ((tabNode: TabNode) => React.ReactNode));
-    maximize?: (React.ReactNode | ((tabSetNode: TabSetNode) => React.ReactNode));
-    restore?: (React.ReactNode | ((tabSetNode: TabSetNode) => React.ReactNode));
-    more?: (React.ReactNode | ((tabSetNode: (TabSetNode | BorderNode), hiddenTabs: { node: TabNode; index: number }[]) => React.ReactNode));
+    close?: React.ReactNode | ((tabNode: TabNode) => React.ReactNode);
+    closeTabset?: React.ReactNode | ((tabSetNode: TabSetNode) => React.ReactNode);
+    popout?: React.ReactNode | ((tabNode: TabNode) => React.ReactNode);
+    maximize?: React.ReactNode | ((tabSetNode: TabSetNode) => React.ReactNode);
+    restore?: React.ReactNode | ((tabSetNode: TabSetNode) => React.ReactNode);
+    more?: React.ReactNode | ((tabSetNode: TabSetNode | BorderNode, hiddenTabs: { node: TabNode; index: number }[]) => React.ReactNode);
     edgeArrow?: React.ReactNode;
-    activeTabset?: (React.ReactNode | ((tabSetNode: TabSetNode) => React.ReactNode));
+    activeTabset?: React.ReactNode | ((tabSetNode: TabSetNode) => React.ReactNode);
 }
 
 const defaultIcons = {
@@ -1305,13 +1301,13 @@ const defaultIcons = {
     restore: <RestoreIcon />,
     more: <OverflowIcon />,
     edgeArrow: <EdgeIcon />,
-    activeTabset: <AsterickIcon />
+    activeTabset: <AsterickIcon />,
 };
 
 enum DragSource {
     Internal = "internal",
     External = "external",
-    Add = "add"
+    Add = "add",
 }
 
 /** @internal */
@@ -1326,16 +1322,16 @@ const edgeRectWidth = 10;
 class DragState {
     public readonly mainLayout: LayoutInternal;
     public readonly dragSource: DragSource;
-    public readonly dragNode: Node & IDraggable | undefined;
+    public readonly dragNode: (Node & IDraggable) | undefined;
     public readonly dragJson: IJsonTabNode | undefined;
     public readonly fnNewNodeDropped: ((node?: Node, event?: React.DragEvent<HTMLElement>) => void) | undefined;
 
     public constructor(
         mainLayout: LayoutInternal,
         dragSource: DragSource,
-        dragNode: Node & IDraggable | undefined,
+        dragNode: (Node & IDraggable) | undefined,
         dragJson: IJsonTabNode | undefined,
-        fnNewNodeDropped: ((node?: Node, event?: React.DragEvent<HTMLElement>) => void) | undefined
+        fnNewNodeDropped: ((node?: Node, event?: React.DragEvent<HTMLElement>) => void) | undefined,
     ) {
         this.mainLayout = mainLayout;
         this.dragSource = dragSource;
