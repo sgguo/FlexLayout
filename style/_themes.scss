@@ -112,7 +112,7 @@
     $color_drag1_background: rgba(128, 128, 128, 0.15) !default;
     $color_drag2_background: rgba(128, 128, 128, 0.15) !default;
 
-    $font-size: medium !default;
+    $font-size: small !default;
     $font-family: Roboto, Arial, sans-serif !default;
 
     .flexlayout {
@@ -189,6 +189,7 @@
 }
 
 @mixin dark_theme_overrides {
+
     /*
     dark theme overrides
 */
@@ -315,6 +316,7 @@
 }
 
 @mixin gray_theme_overrides {
+
     /*
     gray theme overrides
 */
@@ -450,6 +452,7 @@
 }
 
 @mixin underline_theme_overrides {
+
     /*
     underline theme overrides
 */
@@ -584,6 +587,7 @@
 }
 
 @mixin rounded_theme_overrides {
+
     /*
     rounded theme overrides
 */
