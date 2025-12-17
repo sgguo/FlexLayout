@@ -180,8 +180,11 @@ export const BorderButton = (props: IBorderButtonProps) => {
         );
     }
 
+    const providedId = node.getAttr("id") as string | undefined;
+
     return (
         <div
+            id={providedId ? `${providedId}-tab` : undefined}
             ref={selfRef}
             data-layout-path={path}
             className={classNames}
