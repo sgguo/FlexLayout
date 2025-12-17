@@ -123,10 +123,12 @@ export const Tab = (props: ITabProps) => {
         className += " " + node.getContentClassName();
     }
 
+    const providedId = node.getAttr("id") as string | undefined;
+
     return (
         <>
             {overlay}
-            <div ref={selfRef} style={style} className={className} data-layout-path={path}></div>
+            <div id={providedId ?? undefined} ref={selfRef} style={style} className={className} data-layout-path={path}></div>
         </>
     );
 };
