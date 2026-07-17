@@ -99,7 +99,7 @@
 
 @mixin dark_theme {
     $color_text: #eeeeee !default;
-    $color_background: black !default;
+    $color_background: #121212 !default;
     $color_base: black !default;
     $color_1: color.adjust($color_base, $lightness: 7%) !default;
     $color_2: color.adjust($color_base, $lightness: 10%) !default;
