@@ -57,7 +57,7 @@
 
 .flexlayout__theme_dark .flexlayout__layout {
   --color-text: #eeeeee;
-  --color-background: black;
+  --color-background: #121212;
   --color-base: black;
   --color-1: rgb(17.85, 17.85, 17.85);
   --color-2: rgb(25.5, 25.5, 25.5);
@@ -1055,5 +1055,3 @@
 .flexlayout__theme_rounded .flexlayout__border_button_trailing:hover {
   background-color: var(--color-3);
 }
-
-/*# sourceMappingURL=combined.css.map */
