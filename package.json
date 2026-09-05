@@ -55,7 +55,7 @@
         "playwright": "playwright test --ui",
         "lint": "eslint src/*",
         "doc": "typedoc --out typedoc --exclude \"**/demo/**/*.tsx\" --excludeInternal --disableSources --excludePrivate --excludeProtected --readme none ./src",
-        "css": "sass style:style"
+        "css": "sass --no-source-map style:style"
     },
     "eslintConfig": {
         "extends": "react-app"
